@@ -80,12 +80,19 @@ export async function generateRecipe(
       let serverErrorDetail = `HTTP ${response.status} ${response.statusText}`;
       let errorBody: any = null;
       try {
-        errorBody = await response.json();
-        if (errorBody?.error?.message) {
-          serverErrorDetail = errorBody.error.message;
+        const errText = await response.text();
+        try {
+          errorBody = JSON.parse(errText);
+          if (errorBody?.error?.message) {
+            serverErrorDetail = errorBody.error.message;
+          }
+        } catch {
+          if (errText) {
+            serverErrorDetail = errText;
+          }
         }
       } catch {
-        // non-json error body
+        // non-text error body
       }
 
       return {
@@ -101,10 +108,10 @@ export async function generateRecipe(
       };
     }
 
-    // Read response text/json
-    const rawPayload = await response.json();
+    // Read response as raw text to defensively prevent unhandled JSON.parse crashes
+    const rawText = await response.text();
 
-    // Guard against stale response again after async json parsing
+    // Guard against stale response again after reading stream
     if (requestId !== currentRequestId) {
       return {
         success: false,
@@ -119,7 +126,7 @@ export async function generateRecipe(
     }
 
     // Validate the response through defensive schema validator
-    const validation = validateResult(rawPayload);
+    const validation = validateResult(rawText);
 
     if (!validation.success) {
       return {
