@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
-import { PromptInput } from './components/PromptInput';
-import { ResultView } from './components/ResultView';
+import { StudioPage } from './pages/StudioPage';
+import { CookbookPage } from './pages/CookbookPage';
+import { PantryPage } from './pages/PantryPage';
+import { DiagnosticsPage } from './pages/DiagnosticsPage';
+import { AboutPage } from './pages/AboutPage';
 import { CookingModeModal } from './components/CookingModeModal';
-import { SavedRecipesModal } from './components/SavedRecipesModal';
-import { FailureSimulator } from './components/FailureSimulator';
 import type { RecipeResult, AppError } from './types/result';
 import { generateRecipe } from './lib/api';
 import type { GenerateOptions } from './lib/api';
@@ -24,7 +26,6 @@ export function App() {
 
   // Saved recipes
   const [savedRecipes, setSavedRecipes] = useState<RecipeResult[]>([]);
-  const [isSavedModalOpen, setIsSavedModalOpen] = useState<boolean>(false);
 
   // Stale request / prompt memory
   const [lastPrompt, setLastPrompt] = useState<string>('3 eggs, cheddar cheese, baby spinach, garlic');
@@ -156,7 +157,7 @@ export function App() {
     });
   };
 
-  // Stale Request Race Condition Test:
+  // Stale Request Race Condition Test
   const handleTestStaleRaceCondition = async () => {
     setError(null);
     setIsLoading(true);
@@ -177,88 +178,106 @@ export function App() {
     : false;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
-      {/* Top Navbar */}
-      <Navbar
-        onNewRecipe={() => {
-          setRecipe(null);
-          setError(null);
-          setCheckedSteps([]);
-        }}
-        onOpenSaved={() => setIsSavedModalOpen(true)}
-        savedCount={savedRecipes.length}
-      />
-
-      {/* Evaluator Failure Mode Simulator Bar */}
-      <FailureSimulator
-        onSimulate={handleSimulate}
-        onTestStaleRaceCondition={handleTestStaleRaceCondition}
-        isLoading={isLoading}
-      />
-
-      {/* Main Container */}
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-6xl space-y-8">
-        {/* Free-form Input Area */}
-        <PromptInput
-          onGenerate={handleGenerate}
-          isLoading={isLoading}
-          initialPrompt={lastPrompt}
-        />
-
-        {/* Structured Result / Loading / Error View */}
-        <ResultView
-          recipe={recipe}
-          isLoading={isLoading}
-          error={error}
-          onRetry={handleRetry}
-          onUseFallback={handleUseFallback}
-          onStartCookingMode={handleStartCookingMode}
-          onSaveRecipe={handleSaveRecipe}
-          isSaved={isCurrentRecipeSaved}
-          onRefine={handleRefine}
-          isRefining={isRefining}
-          checkedSteps={checkedSteps}
-          onToggleStep={handleToggleStep}
-        />
-      </main>
-
-      {/* Fullscreen Cooking Mode Modal */}
-      {isCookingModeOpen && recipe && (
-        <CookingModeModal
-          recipe={recipe}
-          onClose={() => setIsCookingModeOpen(false)}
-          checkedSteps={checkedSteps}
-          onToggleStep={handleToggleStep}
-          scaledServings={cookingServings}
-        />
-      )}
-
-      {/* Saved Recipes Modal */}
-      {isSavedModalOpen && (
-        <SavedRecipesModal
-          savedRecipes={savedRecipes}
-          onSelectRecipe={(selected) => {
-            setRecipe(selected);
+    <Router>
+      <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+        {/* Top Navbar with Multi-Route Navigation */}
+        <Navbar
+          onNewRecipe={() => {
+            setRecipe(null);
             setError(null);
             setCheckedSteps([]);
           }}
-          onDeleteRecipe={handleDeleteSavedRecipe}
-          onClose={() => setIsSavedModalOpen(false)}
+          savedCount={savedRecipes.length}
         />
-      )}
 
-      {/* Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950/60 py-6 text-center text-xs text-slate-500 no-print">
-        <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p>
-            CulinaryCraft • Flam Frontend Internship Assignment • AI Fridge-to-Recipe Interactive Tool
-          </p>
-          <p className="text-slate-400">
-            Protected Backend Proxy • Strict Zod JSON Schema • Defensive Parsing
-          </p>
-        </div>
-      </footer>
-    </div>
+        {/* Main Content Area Routing */}
+        <main className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
+          <Routes>
+            {/* 1. Main Studio / Generator Route */}
+            <Route
+              path="/"
+              element={
+                <StudioPage
+                  recipe={recipe}
+                  isLoading={isLoading}
+                  isRefining={isRefining}
+                  error={error}
+                  lastPrompt={lastPrompt}
+                  checkedSteps={checkedSteps}
+                  isCurrentRecipeSaved={isCurrentRecipeSaved}
+                  onGenerate={handleGenerate}
+                  onRefine={handleRefine}
+                  onRetry={handleRetry}
+                  onUseFallback={handleUseFallback}
+                  onStartCookingMode={handleStartCookingMode}
+                  onSaveRecipe={handleSaveRecipe}
+                  onToggleStep={handleToggleStep}
+                  onSimulate={handleSimulate}
+                  onTestStaleRaceCondition={handleTestStaleRaceCondition}
+                />
+              }
+            />
+
+            {/* 2. Cookbook / Saved Bookmarks Route */}
+            <Route
+              path="/saved"
+              element={
+                <CookbookPage
+                  savedRecipes={savedRecipes}
+                  onSelectRecipe={(selected) => {
+                    setRecipe(selected);
+                    setError(null);
+                    setCheckedSteps([]);
+                  }}
+                  onDeleteRecipe={handleDeleteSavedRecipe}
+                />
+              }
+            />
+
+            {/* 3. Virtual Pantry Stock Route */}
+            <Route
+              path="/pantry"
+              element={
+                <PantryPage
+                  onGenerateFromPantry={(ingredients) => {
+                    handleGenerate(ingredients, {});
+                  }}
+                />
+              }
+            />
+
+            {/* 4. AI Diagnostics & Evaluation Lab Route */}
+            <Route path="/diagnostics" element={<DiagnosticsPage />} />
+
+            {/* 5. Architecture & Rubric Specification Route */}
+            <Route path="/about" element={<AboutPage />} />
+          </Routes>
+        </main>
+
+        {/* Fullscreen Cooking Mode Modal */}
+        {isCookingModeOpen && recipe && (
+          <CookingModeModal
+            recipe={recipe}
+            onClose={() => setIsCookingModeOpen(false)}
+            checkedSteps={checkedSteps}
+            onToggleStep={handleToggleStep}
+            scaledServings={cookingServings}
+          />
+        )}
+
+        {/* Footer */}
+        <footer className="border-t border-slate-800/80 bg-slate-950/80 py-6 text-center text-xs text-slate-500 no-print mt-12">
+          <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p>
+              CulinaryCraft • Flam Frontend Internship Assignment • AI Fridge-to-Recipe Interactive Studio
+            </p>
+            <p className="text-slate-400">
+              Multi-Route Architecture • Protected Backend Proxy • Strict Zod JSON Validation
+            </p>
+          </div>
+        </footer>
+      </div>
+    </Router>
   );
 }
 
