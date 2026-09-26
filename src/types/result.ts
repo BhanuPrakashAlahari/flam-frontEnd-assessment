@@ -60,6 +60,16 @@ export interface RecipeResult {
   generatedAt?: string;
 }
 
+const safeNumber = (defaultVal = 0) =>
+  z.preprocess((val) => {
+    if (typeof val === 'number') return isNaN(val) ? defaultVal : val;
+    if (typeof val === 'string') {
+      const parsed = parseFloat(val);
+      return isNaN(parsed) ? defaultVal : parsed;
+    }
+    return defaultVal;
+  }, z.number());
+
 // Zod Schema for defensive runtime validation (robust against null/undefined fields from LLMs)
 export const IngredientSwapSchema = z.object({
   original: z.string().min(1, 'Original ingredient name required'),
@@ -71,7 +81,7 @@ export const IngredientSwapSchema = z.object({
 export const IngredientSchema = z.object({
   id: z.string().nullable().optional().default(() => Math.random().toString(36).substring(2, 9)),
   name: z.string().min(1, 'Ingredient name cannot be empty'),
-  amount: z.number().positive('Amount must be greater than 0').catch(1),
+  amount: safeNumber(1),
   unit: z.string().nullable().optional().default('item'),
   category: z.enum(['produce', 'dairy', 'meat', 'pantry', 'bakery', 'spices', 'canned', 'other']).catch('pantry'),
   notes: z.string().nullable().optional(),
@@ -80,20 +90,20 @@ export const IngredientSchema = z.object({
 });
 
 export const CookingStepSchema = z.object({
-  stepNumber: z.number().int().positive('Step number must be positive'),
+  stepNumber: safeNumber(1),
   instruction: z.string().min(3, 'Instruction must be at least 3 characters'),
   shortSummary: z.string().nullable().optional(),
-  timerMinutes: z.number().min(0).nullable().optional(),
+  timerMinutes: safeNumber(0).nullable().optional(),
   tip: z.string().nullable().optional(),
   ingredientsUsed: z.array(z.string()).nullable().optional().default([]),
 });
 
 export const NutritionSchema = z.object({
-  calories: z.number().nonnegative().nullable().optional().catch(0),
-  proteinGrams: z.number().nonnegative().nullable().optional().catch(0),
-  carbsGrams: z.number().nonnegative().nullable().optional().catch(0),
-  fatGrams: z.number().nonnegative().nullable().optional().catch(0),
-  fiberGrams: z.number().nonnegative().nullable().optional(),
+  calories: safeNumber(300).nullable().optional(),
+  proteinGrams: safeNumber(15).nullable().optional(),
+  carbsGrams: safeNumber(30).nullable().optional(),
+  fatGrams: safeNumber(10).nullable().optional(),
+  fiberGrams: safeNumber(3).nullable().optional(),
 });
 
 export const RecipeResultSchema = z.object({
@@ -103,10 +113,10 @@ export const RecipeResultSchema = z.object({
   description: z.string().min(5, 'Description is too short'),
   cuisine: z.string().nullable().optional().default('Fusion / Comfort Food'),
   difficulty: z.enum(['Easy', 'Medium', 'Hard']).catch('Easy'),
-  prepTimeMinutes: z.number().nonnegative().catch(10),
-  cookTimeMinutes: z.number().nonnegative().catch(15),
-  totalTimeMinutes: z.number().nonnegative().catch(25),
-  baseServings: z.number().int().min(1).catch(2),
+  prepTimeMinutes: safeNumber(10),
+  cookTimeMinutes: safeNumber(15),
+  totalTimeMinutes: safeNumber(25),
+  baseServings: safeNumber(2),
   dietaryTags: z.array(z.string()).nullable().optional().default([]),
   ingredients: z.array(IngredientSchema).min(1, 'At least one ingredient is required'),
   pantryStaplesNeeded: z.array(z.string()).nullable().optional().default([]),

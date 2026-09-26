@@ -7,7 +7,7 @@
     "dev": "concurrently -n \"SERVER,CLIENT\" -c \"magenta,cyan\" \"npm run server\" \"npm run client\"",
     "start": "npm run dev",
     "client": "vite",
-    "server": "tsx server/index.ts",
+    "server": "tsx watch server/index.ts",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"

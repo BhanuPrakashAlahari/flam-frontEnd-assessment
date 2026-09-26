@@ -14,7 +14,7 @@ export interface ValidationFailure {
 export type ValidationOutcome = ValidationSuccess | ValidationFailure;
 
 /**
- * Extracts JSON from LLM string output in case of markdown codeblock wrapping
+ * Extracts JSON from LLM string output in case of markdown codeblock wrapping or conversational preamble
  */
 export function cleanRawJsonString(raw: string): string {
   if (!raw || typeof raw !== 'string') return '';
@@ -24,6 +24,12 @@ export function cleanRawJsonString(raw: string): string {
   if (trimmed.startsWith('```')) {
     trimmed = trimmed.replace(/^```(?:json)?\s*/i, '');
     trimmed = trimmed.replace(/\s*```$/, '');
+  }
+
+  const firstBrace = trimmed.indexOf('{');
+  const lastBrace = trimmed.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    trimmed = trimmed.slice(firstBrace, lastBrace + 1);
   }
 
   return trimmed.trim();
@@ -96,6 +102,23 @@ export function validateResult(rawInput: unknown): ValidationOutcome {
         canRetry: true,
       },
     };
+  }
+
+  // Check if the response contains an error object from LLM or backend
+  if ('error' in (parsed as Record<string, any>)) {
+    const errObj = (parsed as Record<string, any>).error;
+    if (errObj && typeof errObj === 'object') {
+      return {
+        success: false,
+        error: {
+          type: errObj.type || 'INVALID_PROMPT',
+          title: errObj.title || 'Input Error',
+          message: errObj.message || 'The application was unable to process this request.',
+          details: errObj.details,
+          canRetry: true,
+        },
+      };
+    }
   }
 
   // 4. Validate schema with Zod

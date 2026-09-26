@@ -16,7 +16,7 @@ export interface GenerateRequestBody {
 }
 
 /**
- * Strips markdown fences if present (```json ... ```)
+ * Strips markdown fences and extracts raw JSON object if present
  */
 function cleanJson(raw: string): string {
   if (!raw || typeof raw !== 'string') return '';
@@ -24,6 +24,11 @@ function cleanJson(raw: string): string {
   if (trimmed.startsWith('```')) {
     trimmed = trimmed.replace(/^```(?:json)?\s*/i, '');
     trimmed = trimmed.replace(/\s*```$/, '');
+  }
+  const firstBrace = trimmed.indexOf('{');
+  const lastBrace = trimmed.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    trimmed = trimmed.slice(firstBrace, lastBrace + 1);
   }
   return trimmed.trim();
 }
@@ -362,15 +367,56 @@ export async function handleGenerateRecipe(reqBody: GenerateRequestBody): Promis
     }
 
     // 3. Real Gemini Flash API call if GEMINI_API_KEY is configured
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY?.trim().replace(/^['"]|['"]$/g, '');
 
-    if (apiKey && apiKey.trim() !== '' && apiKey !== 'YOUR_GEMINI_API_KEY') {
-      const modelCandidates = [
-        'gemini-2.0-flash',
-        'gemini-1.5-flash',
-        'gemini-1.5-flash-8b',
-        'gemini-1.5-pro'
-      ];
+    if (apiKey && apiKey !== '' && apiKey !== 'YOUR_GEMINI_API_KEY') {
+      let modelCandidates: string[] = [];
+
+      // Dynamically discover available models for this specific API key
+      try {
+        const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+        if (listRes.ok) {
+          const listData: any = await listRes.json();
+          if (Array.isArray(listData.models)) {
+            const available = listData.models
+              .filter((m: any) => m.supportedGenerationMethods?.includes('generateContent'))
+              .map((m: any) => m.name.replace(/^models\//, ''));
+
+            // Prioritize flash models
+            available.sort((a: string, b: string) => {
+              if (a.includes('flash') && !b.includes('flash')) return -1;
+              if (!a.includes('flash') && b.includes('flash')) return 1;
+              return 0;
+            });
+
+            if (available.length > 0) {
+              modelCandidates = available;
+              console.log(`[CookMate AI] Discovered ${available.length} active models for API key. Primary: ${available[0]}`);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[CookMate AI] Could not auto-discover models:', err);
+      }
+
+      // Fallback model list if listing is unavailable
+      if (modelCandidates.length === 0) {
+        modelCandidates = [
+          'gemini-2.5-flash',
+          'gemini-2.5-pro',
+          'gemini-2.0-flash-001',
+          'gemini-2.0-flash-exp',
+          'gemini-1.5-flash-latest',
+          'gemini-1.5-pro-latest',
+        ];
+      }
+
+      // Explicitly remove retired/deprecated model names that return 404
+      const DEPRECATED_NAMES = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-1.5-pro'];
+      modelCandidates = modelCandidates.filter((m) => !DEPRECATED_NAMES.includes(m));
+      if (modelCandidates.length === 0) {
+        modelCandidates = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash-001', 'gemini-1.5-flash-latest'];
+      }
 
       for (const modelName of modelCandidates) {
         try {
@@ -380,48 +426,56 @@ ${options?.servings ? `Target Servings: ${options.servings}` : 'Target Servings:
 ${options?.cookingTimeMax ? `Max cooking time: ${options.cookingTimeMax} minutes` : ''}
 ${options?.refinementPrompt ? `Follow-up refinement instructions: "${options.refinementPrompt}". Tweak the recipe accordingly.` : ''}`;
 
-          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+          // Try v1beta first, then fallback to v1
+          const apiVersions = ['v1beta', 'v1'];
+          for (const apiVersion of apiVersions) {
+            const endpoint = `https://generativelanguage.googleapis.com/${apiVersion}/models/${modelName}:generateContent?key=${apiKey}`;
 
-          const geminiResponse = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              contents: [
-                {
-                  role: 'user',
-                  parts: [{ text: `${STRICT_SYSTEM_PROMPT}\n\nUSER REQUEST:\n${userMessage}` }],
-                },
-              ],
-              generationConfig: {
-                responseMimeType: 'application/json',
-                temperature: 0.3,
+            const geminiResponse = await fetch(endpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
               },
-            }),
-          });
+              body: JSON.stringify({
+                contents: [
+                  {
+                    role: 'user',
+                    parts: [{ text: `${STRICT_SYSTEM_PROMPT}\n\nUSER REQUEST:\n${userMessage}` }],
+                  },
+                ],
+                generationConfig: {
+                  responseMimeType: 'application/json',
+                  temperature: 0.3,
+                },
+              }),
+            });
 
-          if (geminiResponse.ok) {
-            const geminiData: any = await geminiResponse.json();
-            const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (geminiResponse.ok) {
+              const geminiData: any = await geminiResponse.json();
+              const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
 
-            if (rawText) {
-              const cleaned = cleanJson(rawText);
-              const parsedJson = JSON.parse(cleaned);
-              if (parsedJson?.error?.title) {
+              if (rawText) {
+                const cleaned = cleanJson(rawText);
+                const parsedJson = JSON.parse(cleaned);
+                if (parsedJson?.error?.title) {
+                  return {
+                    status: 400,
+                    body: parsedJson,
+                  };
+                }
+                console.log(`[CookMate AI] Recipe generated using model: ${modelName} (${apiVersion})`);
                 return {
-                  status: 400,
+                  status: 200,
                   body: parsedJson,
                 };
               }
-              return {
-                status: 200,
-                body: parsedJson,
-              };
+            } else {
+              const errText = await geminiResponse.text();
+              // Only log if it's not a 404 to keep server logs clean
+              if (geminiResponse.status !== 404) {
+                console.warn(`Gemini model ${modelName} (${apiVersion}) status ${geminiResponse.status}: ${errText.slice(0, 100)}`);
+              }
             }
-          } else {
-            const errText = await geminiResponse.text();
-            console.warn(`Gemini model ${modelName} returned status ${geminiResponse.status}: ${errText.slice(0, 150)}`);
           }
         } catch (llmErr) {
           console.warn(`Attempt with ${modelName} failed:`, llmErr);
@@ -429,6 +483,7 @@ ${options?.refinementPrompt ? `Follow-up refinement instructions: "${options.ref
       }
 
       // Fallback if live API temporary issue
+      console.info('[CookMate AI] Falling back to smart culinary recipe engine.');
       const mock = generateSmartMockRecipe(prompt, options);
       return {
         status: 200,
