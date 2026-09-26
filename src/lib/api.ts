@@ -1,5 +1,6 @@
 import type { RecipeResult, AppError } from '../types/result';
 import { validateResult } from './validateResult';
+import { validateCulinaryInput } from './culinaryValidation';
 
 export interface GenerateOptions {
   dietaryPreferences?: string[];
@@ -41,6 +42,23 @@ export async function generateRecipe(
   const requestId = ++currentRequestId;
   const controller = new AbortController();
   activeAbortController = controller;
+
+  // Strict pre-flight culinary validation (unless running test failure simulation)
+  if (!options.simulateFailure) {
+    const culinaryCheck = validateCulinaryInput(prompt);
+    if (!culinaryCheck.isValid) {
+      return {
+        success: false,
+        error: {
+          type: 'INVALID_PROMPT',
+          title: 'Non-Cooking Input Detected',
+          message: culinaryCheck.reason || 'Please enter valid cooking ingredients, pantry items, or food notes.',
+          canRetry: true,
+        },
+        requestId,
+      };
+    }
+  }
 
   // Timeout guard for slow responses
   const timeoutId = setTimeout(() => {
@@ -93,6 +111,20 @@ export async function generateRecipe(
         }
       } catch {
         // non-text error body
+      }
+
+      if (errorBody?.error?.type === 'INVALID_PROMPT') {
+        return {
+          success: false,
+          error: {
+            type: 'INVALID_PROMPT',
+            title: errorBody.error.title || 'Non-Cooking Input Detected',
+            message: errorBody.error.message || 'Please enter valid cooking ingredients or kitchen items.',
+            details: serverErrorDetail,
+            canRetry: true,
+          },
+          requestId,
+        };
       }
 
       return {

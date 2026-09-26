@@ -59,6 +59,6 @@ app.post('/api/generate', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🍳 Culinary AI Backend Proxy listening at http://localhost:${PORT}`);
-  console.log(`📡 Ready to safely forward requests to Gemini 3 Flash without exposing API keys.`);
+  console.log(`CookMate Backend Proxy listening at http://localhost:${PORT}`);
+  console.log(`Ready to safely forward requests to Gemini 3 Flash without exposing API keys.`);
 });

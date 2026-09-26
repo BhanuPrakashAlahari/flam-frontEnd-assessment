@@ -1,3 +1,4 @@
+import React, { useRef, useEffect } from 'react';
 import type { RecipeResult, AppError } from '../types/result';
 import type { GenerateOptions } from '../lib/api';
 import { PromptInput } from '../components/PromptInput';
@@ -41,6 +42,18 @@ export const StudioPage: React.FC<StudioPageProps> = ({
   onSimulate,
   onTestStaleRaceCondition,
 }) => {
+  const resultSectionRef = useRef<HTMLDivElement>(null);
+
+  // Automatically smooth-scroll to the recipe result area when generation begins or updates
+  useEffect(() => {
+    if (isLoading || recipe || error) {
+      const timer = setTimeout(() => {
+        resultSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, recipe, error]);
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Free-form Input Area */}
@@ -51,20 +64,22 @@ export const StudioPage: React.FC<StudioPageProps> = ({
       />
 
       {/* Structured Result / Loading / Error View */}
-      <ResultView
-        recipe={recipe}
-        isLoading={isLoading}
-        error={error}
-        onRetry={onRetry}
-        onUseFallback={onUseFallback}
-        onStartCookingMode={onStartCookingMode}
-        onSaveRecipe={onSaveRecipe}
-        isSaved={isCurrentRecipeSaved}
-        onRefine={onRefine}
-        isRefining={isRefining}
-        checkedSteps={checkedSteps}
-        onToggleStep={onToggleStep}
-      />
+      <div ref={resultSectionRef} className="scroll-mt-24">
+        <ResultView
+          recipe={recipe}
+          isLoading={isLoading}
+          error={error}
+          onRetry={onRetry}
+          onUseFallback={onUseFallback}
+          onStartCookingMode={onStartCookingMode}
+          onSaveRecipe={onSaveRecipe}
+          isSaved={isCurrentRecipeSaved}
+          onRefine={onRefine}
+          isRefining={isRefining}
+          checkedSteps={checkedSteps}
+          onToggleStep={onToggleStep}
+        />
+      </div>
 
       {/* Discrete Evaluator Failure Bar at bottom */}
       <div className="pt-4">

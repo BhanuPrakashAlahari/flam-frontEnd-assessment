@@ -16,7 +16,17 @@ export interface GenerateRequestBody {
 const STRICT_SYSTEM_PROMPT = `You are a world-class professional chef and interactive culinary AI.
 Your job is to transform free-form user ingredient inputs into an ultra-practical, delicious, structured recipe.
 
-RULES:
+CRITICAL INTENT VALIDATION:
+If the user's input is NOT related to food, cooking, kitchen ingredients, or recipes (e.g. keyboard mash like "asdfghjk", non-food questions, coding queries, or gibberish), you MUST return JSON with:
+{
+  "error": {
+    "type": "INVALID_PROMPT",
+    "title": "Non-Cooking Input Detected",
+    "message": "Please enter valid cooking ingredients or kitchen items (for example: eggs, cheese, spinach, pasta)."
+  }
+}
+
+RULES FOR VALID FOOD INPUTS:
 1. Return ONLY valid JSON matching the exact schema below. Do NOT include any markdown code fences (\`\`\`json), do NOT include any conversational preamble or postscript.
 2. Every ingredient MUST have:
    - "id": a unique string ID (e.g. "ing_1", "ing_2")
@@ -96,6 +106,9 @@ EXACT JSON SCHEMA TO MATCH:
     }
   ]
 }`;
+
+import { validateCulinaryInput } from '../src/lib/culinaryValidation';
+
 
 /**
  * Generates an intelligent, realistic recipe from user ingredients when running offline or testing
@@ -204,7 +217,7 @@ function generateSmartMockRecipe(userPrompt: string, options?: GenerateRequestBo
           {
             original: 'Garlic',
             substitute: 'Garlic Powder',
-            ratio: '½ tsp',
+            ratio: '1/2 tsp',
             dietaryBenefit: 'Pantry Alternative',
           },
         ],
@@ -270,7 +283,7 @@ function generateSmartMockRecipe(userPrompt: string, options?: GenerateRequestBo
 }
 
 /**
- * Handles LLM Generation via Gemini 3 / Gemini 2.5 Flash API or intelligent mock fallback
+ * Handles LLM Generation via Gemini Flash API or intelligent mock fallback
  */
 export async function handleGenerateRecipe(reqBody: GenerateRequestBody): Promise<{ status: number; body: any }> {
   const { prompt, options } = reqBody;
@@ -320,11 +333,26 @@ export async function handleGenerateRecipe(reqBody: GenerateRequestBody): Promis
     }
   }
 
-  // 2. Real Gemini Flash API call if GEMINI_API_KEY is configured
+  // 2. Strict Intent Validation: Check whether the user entered cooking/ingredient info
+  const culinaryCheck = validateCulinaryInput(prompt);
+  if (!culinaryCheck.isValid) {
+    return {
+      status: 400,
+      body: {
+        error: {
+          type: 'INVALID_PROMPT',
+          title: 'Non-Cooking Input Detected',
+          message: culinaryCheck.reason || 'Please enter cooking ingredients, pantry items, or food notes (for example: eggs, garlic, spinach, pasta, chicken).',
+        },
+      },
+    };
+  }
+
+
+  // 3. Real Gemini Flash API call if GEMINI_API_KEY is configured
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (apiKey && apiKey.trim() !== '' && apiKey !== 'YOUR_GEMINI_API_KEY') {
-    // Model preference list: Gemini 3 Flash / 3.6 Flash / 2.5 Flash
     const modelCandidates = [
       'gemini-3-flash-preview',
       'gemini-3.6-flash',
@@ -368,6 +396,12 @@ ${options?.refinementPrompt ? `Follow-up refinement instructions: "${options.ref
 
           if (rawText) {
             const parsedJson = JSON.parse(rawText);
+            if (parsedJson?.error?.title) {
+              return {
+                status: 400,
+                body: parsedJson,
+              };
+            }
             return {
               status: 200,
               body: parsedJson,
@@ -382,7 +416,7 @@ ${options?.refinementPrompt ? `Follow-up refinement instructions: "${options.ref
       }
     }
 
-    // If live API calls experienced temporary rate limits or quota, fallback gracefully
+    // Fallback if live API temporary issue
     const mock = generateSmartMockRecipe(prompt, options);
     return {
       status: 200,
@@ -390,7 +424,7 @@ ${options?.refinementPrompt ? `Follow-up refinement instructions: "${options.ref
     };
   }
 
-  // 3. Fallback Smart Mock Engine if no API key
+  // 4. Fallback Smart Mock Engine if no API key
   await new Promise((resolve) => setTimeout(resolve, 800));
   const mockRecipe = generateSmartMockRecipe(prompt, options);
 

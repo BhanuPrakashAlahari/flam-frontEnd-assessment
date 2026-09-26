@@ -1,18 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Navbar } from './components/Navbar';
+import { AnimatedNavFramer } from '@/components/ui/navigation-menu';
 import { LandingPage } from './pages/LandingPage';
 import { StudioPage } from './pages/StudioPage';
 import { CookbookPage } from './pages/CookbookPage';
 import { PantryPage } from './pages/PantryPage';
-import { DiagnosticsPage } from './pages/DiagnosticsPage';
-import { AboutPage } from './pages/AboutPage';
+import DemoPage from '@/components/ui/demo';
 import { CookingModeModal } from './components/CookingModeModal';
 import type { RecipeResult, AppError } from './types/result';
 import { generateRecipe } from './lib/api';
 import type { GenerateOptions } from './lib/api';
 
-const SAVED_RECIPES_STORAGE_KEY = 'culinary_craft_saved_recipes_v1';
+const SAVED_RECIPES_STORAGE_KEY = 'cookmate_saved_recipes_v1';
 
 export function App() {
   const [recipe, setRecipe] = useState<RecipeResult | null>(null);
@@ -184,9 +183,9 @@ export function App() {
 
   return (
     <Router>
-      <div className="min-h-screen flex flex-col bg-[#f8fafc] text-slate-900">
-        {/* Top Navbar with Multi-Route Navigation */}
-        <Navbar
+      <div className="min-h-screen flex flex-col bg-[#f8fafc] text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+        {/* Full-width Animated Framer Motion Navigation */}
+        <AnimatedNavFramer
           onNewRecipe={() => {
             setRecipe(null);
             setError(null);
@@ -195,8 +194,8 @@ export function App() {
           savedCount={savedRecipes.length}
         />
 
-        {/* Main Content Area Routing */}
-        <main className="flex-1 container mx-auto px-4 py-6 max-w-6xl">
+        {/* Main Content Area with Top Padding for Floating Navbar */}
+        <main className="flex-1 container mx-auto px-4 pt-24 sm:pt-28 pb-10 max-w-6xl">
           <Routes>
             {/* 1. Landing Page (Home) */}
             <Route
@@ -265,11 +264,11 @@ export function App() {
               }
             />
 
-            {/* 5. AI Diagnostics & Evaluation Lab Route */}
-            <Route path="/diagnostics" element={<DiagnosticsPage />} />
+            {/* 5. Standalone Framer Motion Demo Route */}
+            <Route path="/demo" element={<DemoPage />} />
 
-            {/* 6. Architecture & Rubric Specification Route */}
-            <Route path="/about" element={<AboutPage />} />
+            {/* Fallback route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
 
@@ -284,14 +283,14 @@ export function App() {
           />
         )}
 
-        {/* Clean White & Slate Footer */}
-        <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500 no-print mt-12 shadow-xs">
+        {/* Clean Footer */}
+        <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500 no-print mt-12">
           <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="font-medium text-slate-700">
-              CulinaryCraft • Flam Frontend Internship Assignment • AI Interactive Fridge Studio
+              CookMate • AI Fridge-to-Recipe Studio
             </p>
-            <p className="text-slate-500">
-              Multi-Route React Architecture • Google Gemini 3 Flash • Strict Zod JSON Parsing
+            <p className="text-slate-500 font-medium">
+              Made with love by Bhanu Prakash
             </p>
           </div>
         </footer>

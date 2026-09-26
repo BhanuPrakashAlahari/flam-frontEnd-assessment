@@ -1,154 +1,139 @@
-# 🍳 CulinaryCraft — AI Fridge-to-Recipe Interactive Studio
-> **Frontend Internship Assignment for Flam**  
-> *Transform unpredictable AI model output into reliable, interactive, and resilient kitchen UI.*
+# CookMate - AI Fridge-to-Recipe Interactive Studio
+
+Frontend Internship Assessment for Flam
+Transform unpredictable AI model output into reliable, interactive, and resilient kitchen UI.
 
 ---
 
-## 🌟 1. Overview & Objective
+## 1. Overview
 
-**CulinaryCraft** is a specialized React application that takes unstructured, free-form kitchen notes (e.g. *"I have 3 eggs, half a block of cheddar, some baby spinach, garlic, and leftover rice"*) and converts them into an interactive culinary tool — **never a raw chatbot window**.
+CookMate is a specialized React web application that converts unstructured kitchen notes (for example, "I have 3 eggs, cheddar cheese, garlic, spinach, and leftover rice") into an interactive culinary tool. 
 
-The application communicates with a secure backend proxy to request strict, structured JSON data conforming to an enforced schema, passes all responses through defensive parsing and runtime Zod validation before rendering, and handles every realistic failure mode gracefully without crashing.
-
----
-
-## 🚀 2. Quick Start
-
-Running the entire full-stack app (Backend Proxy + Vite Frontend) requires only a single command:
-
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Start both Backend Proxy (:3001) and Frontend (:5173)
-npm start
-```
-
-Open [http://localhost:5173](http://localhost:5173) in your browser.
-
-### 🔑 Environment Variables (`.env`)
-By default, the application runs out-of-the-box using the built-in **Intelligent Culinary Mock Engine** (no API key required for immediate review and testing!).
-
-To use a live Google Gemini API key:
-1. Create a `.env` file from `.env.example`:
-   ```bash
-   cp .env.example .env
-   ```
-2. Add your free Gemini API key from [Google AI Studio](https://aistudio.google.com/):
-   ```env
-   GEMINI_API_KEY=your_actual_gemini_api_key_here
-   PORT=3001
-   ```
+The application communicates with a secure backend proxy to request structured JSON data conforming to a strict schema. All responses pass through defensive parsing, sanitization, and runtime Zod validation before rendering. The user interface handles all realistic AI failure modes gracefully without crashing, and includes dynamic interactive features such as scalable ingredient servings, smart substitutions, checkable steps with countdown timers, and a focus cooking mode.
 
 ---
 
-## 🛠️ 3. Core Architecture & Project Structure
+## 2. Architecture & Design
 
-The project strictly follows the architecture outlined in the assignment brief, separating API proxying, shape validation, and interactive UI components:
+The project uses a client-server architecture to ensure API keys remain protected while keeping the frontend fast and reactive:
 
 ```
 flam/
 ├── src/
 │   ├── components/
-│   │   ├── PromptInput.tsx        # Free-form input, quick-add pills, surprise combos, dietary filters
+│   │   ├── ui/                    # Base UI components (navigation, dialog, buttons)
+│   │   ├── PromptInput.tsx        # Ingredient input, quick-add pills, dietary filters
 │   │   ├── ResultView.tsx         # State router (Loading / Error / Recipe / Empty)
-│   │   ├── RecipeView.tsx         # Main interactive view (scalable servings, checkable steps, swaps)
-│   │   ├── CookingModeModal.tsx   # Fullscreen focus mode with step-by-step navigation & timers
-│   │   ├── ErrorState.tsx         # Shared defensive error UI with technical diagnostic trace
-│   │   ├── LoadingState.tsx       # Animated culinary loading tips & skeleton shimmers
-│   │   ├── FailureSimulator.tsx   # Evaluator toolbar to trigger & verify failure modes on demand
+│   │   ├── RecipeView.tsx         # Main recipe display (scalable servings, checkable steps)
+│   │   ├── CookingModeModal.tsx   # Focus mode with step navigation & countdown timers
+│   │   ├── ErrorState.tsx         # Defensive error UI with retry action and technical traces
+│   │   ├── LoadingState.tsx       # Skeleton loaders and status indicators
+│   │   ├── FailureSimulator.tsx   # Evaluator toolbar to trigger and verify failure modes
 │   │   ├── SavedRecipesModal.tsx  # LocalStorage saved recipe drawer
-│   │   └── Navbar.tsx             # Header with live server health badge & bookmarks count
+│   │   └── Navbar.tsx             # Translucent navigation header with route links
 │   ├── lib/
-│   │   ├── api.ts                 # Talks ONLY to backend proxy; includes stale request guards
-│   │   └── validateResult.ts      # Strict defensive JSON cleaning & Zod schema validation
+│   │   ├── api.ts                 # Backend communication, timeout guards, and request tracking
+│   │   ├── validateResult.ts      # Defensive JSON sanitization and Zod schema validation
+│   │   └── utils.ts               # Class name merging utility (cn)
 │   ├── types/
-│   │   └── result.ts              # TypeScript interfaces & Zod runtime validation schemas
-│   ├── App.tsx                    # Main state orchestration & race-condition mitigation
-│   ├── index.css                  # Modern CSS design system with glassmorphism & animations
-│   └── main.tsx
+│   │   └── result.ts              # TypeScript interfaces and Zod runtime schemas
+│   ├── App.tsx                    # Top-level state orchestration and race condition protection
+│   ├── index.css                  # Modern CSS design system (White & Royal Blue theme)
+│   └── main.tsx                   # Application entry point
 ├── server/
-│   ├── generate.ts                # Protected backend proxy holding API key, Gemini caller & mock engine
+│   ├── generate.ts                # Backend service handling Gemini API calls and mock engine
 │   └── index.ts                   # Express server entry point on port 3001
-├── .env.example
-├── README.md
-└── package.json
+├── .env.example                   # Environment configuration template
+├── README.md                      # Project documentation
+└── package.json                   # Dependencies and scripts
 ```
 
----
-
-## ✨ 4. Interactive Features
-
-### ⚖️ 1. Dynamic Scalable Servings
-- Allows scaling portion sizes (1x, 2x, 4x, or custom 1–12 portions).
-- Dynamically recalculates all ingredient amounts with fraction formatting (e.g. `½ tbsp`, `1 ¾ cups`, `300g`).
-
-### 🔄 2. Smart Ingredient Swaps
-- The AI provides realistic substitutions (e.g., *Cheddar Cheese ➔ Nutritional Yeast for Dairy-Free*, or *Chicken ➔ Crispy Tofu*).
-- Clicking any swap pill updates the ingredient item in-place with its replacement ratio and highlights dietary benefits.
-
-### ☑️ 3. Checkable Steps & Active Timers
-- Interactive checklist to cross off completed cooking steps with real-time progress bar.
-- Steps with cooking durations include built-in countdown timers with audio chimes (synthesized via Web Audio API).
-
-### ⏱️ 4. Fullscreen Focus Cooking Mode
-- Distraction-free kitchen display designed for cooking at the stove.
-- Large legible fonts, ingredients needed for the active step, step-by-step navigation, and celebratory confetti upon completion.
-
-### 🔁 5. Dynamic Recipe Refinement Loop
-- Refine existing recipes without starting from scratch (e.g., *"Make it spicy"*, *"Convert to air fryer"*, *"Under 15 minutes"*).
-
-### 💾 6. LocalStorage Bookmarks & Export
-- Save favorite generated recipes to browser storage.
-- One-click ingredient copy to clipboard and print-optimized recipe cards (`@media print`).
+### Key Architectural Decisions:
+1. **Protected Backend Proxy**: The Gemini API key is stored exclusively on the server (`server/index.ts` and `server/generate.ts`) and is never exposed to the client bundle.
+2. **Defensive Validation Layer**: The client never directly consumes raw LLM responses. Data must pass through `cleanRawJsonString` and `RecipeResultSchema.safeParse` before entering application state.
+3. **Built-in Mock Engine**: If no Gemini API key is configured, the server automatically uses an intelligent culinary mock engine to generate realistic responses, allowing full offline testing.
 
 ---
 
-## 🛡️ 5. Defensive Data Handling & Realistic Failure Modes
+## 3. Quick Start & Setup Guide
 
-Handling unpredictability in AI output is the primary core of this assignment. The app includes dedicated mechanisms for every failure scenario:
+### Prerequisites
+- Node.js (v18 or higher)
+- npm (v9 or higher)
 
-| Failure Mode | How It Is Handled | Verification in App |
-| :--- | :--- | :--- |
-| **Malformed JSON** | `validateResult.ts` catches parse errors in a `try/catch` block, sanitizes markdown fences, and routes to `ErrorState` with the exact syntax exception. | Click **"Malformed JSON"** in the top Evaluator Bar. |
-| **Wrong Shape / Missing Fields** | `validateResult.ts` runs strict runtime **Zod schema validation**. Missing fields or wrong types trigger actionable diagnostics without UI crashes. | Click **"Wrong Shape / Missing Fields"** in the Evaluator Bar. |
-| **Empty AI Response** | Checks for null/empty/blank string responses and renders a descriptive error explaining that the AI provided no data. | Click **"Empty Response"** in the Evaluator Bar. |
-| **Slow Response / Timeout** | `lib/api.ts` uses an `AbortController` with a 25-second timeout guard to prevent silent hangs, displaying a timeout error state. | Click **"Slow Response (Timeout)"** in the Evaluator Bar. |
-| **Failed Backend Request (500)** | Gracefully captures server errors and HTTP gateway failures, displaying a friendly error with retry capabilities. | Click **"Server 500 Error"** in the Evaluator Bar. |
-| **Stale Response Race Condition** | `requestId` tracking ensures that if a user fires a fast request while a slower request is in-flight, the older response is safely discarded. | Click **"Stale Request Guard Test"** in the Evaluator Bar. |
+### Installation & Running
+
+1. Clone the repository and install dependencies:
+```bash
+git clone https://github.com/BhanuPrakashAlahari/flam-frontEnd-assessment.git
+cd flam
+npm install
+```
+
+2. (Optional) Configure Google Gemini API Key:
+By default, the application runs out-of-the-box using the built-in mock engine. To enable live AI generation:
+```bash
+cp .env.example .env
+```
+Open `.env` and add your Google Gemini API key:
+```env
+GEMINI_API_KEY=your_actual_gemini_api_key_here
+PORT=3001
+```
+
+3. Start the application:
+```bash
+npm start
+```
+This command concurrently starts:
+- The Backend Proxy on `http://localhost:3001`
+- The Vite Frontend on `http://localhost:5173`
+
+4. Open `http://localhost:5173` in your browser.
 
 ---
 
-## 🧪 6. Evaluator Bar (Testing Failure Modes)
+## 4. Error Handling Strategy
 
-To make evaluating and grading as straightforward as possible, a collapsible **"Assignment Evaluator Bar"** is built into the top of the interface. 
+Handling unpredictability in generative AI output is central to this project. The system addresses all 6 core failure modes:
 
-You can trigger any error state with a single click and observe how the application handles it and recovers seamlessly when you click **"Retry Generation"**.
+| Failure Mode | Root Cause | Handling Strategy | User Experience |
+| :--- | :--- | :--- | :--- |
+| **Malformed JSON** | Model outputs invalid syntax or markdown wrappers | Strips markdown fences (`\`\`\`json`), catches `JSON.parse` errors in `validateResult.ts`, and routes to a clear error state. | Clear error card explaining syntax failure with a "Retry Generation" button. |
+| **Wrong Shape / Missing Fields** | Model produces valid JSON but omits mandatory fields or passes wrong types | Validates structure using runtime `Zod` schemas (`RecipeResultSchema.safeParse`). Handles `null` fields defensively with fallback defaults. | Descriptive error message identifying the missing fields without breaking the UI. |
+| **Empty Response** | Model returns an empty string or whitespace | Checks for empty string/null data before parsing and routes to an explicit failure state. | Clear notification stating no content was generated, offering an instant retry. |
+| **Slow Response / Timeout** | Upstream API hangs or network degrades | Uses an `AbortController` in `api.ts` configured with a 25-second timeout limit. | Request is safely aborted, loading spinner dismisses, and a timeout error with retry appears. |
+| **Failed Backend Request** | Server error (HTTP 500), rate limiting (429), or network drop | Wraps all fetch calls in `try/catch` and inspects `response.ok`, extracting error details safely as plain text. | Non-crashing error card detailing the status code and actionable retry prompt. |
+| **Stale Response Race Condition** | Older slow request resolves after a newer fast request | Tracks incremental `requestId` counters. Older in-flight responses that do not match the current ID are discarded. | Newer request data is preserved; stale responses never overwrite the latest UI state. |
 
 ---
 
-## 🤖 7. AI Usage Disclosure
+## 5. Core Interactive Features
 
-In adherence to Section 8 of the assignment guidelines:
-- **AI Coding Assistant**: Used for accelerating boilerplate scaffolding, drafting strict Zod validation schemas, and refining CSS styling tokens.
-- **Independent Design & Implementation**: The architecture, stale response guard mechanics (`requestId.current`), custom Web Audio chime synthesis, fraction scaling algorithms, and failure simulation harness were designed and reviewed by the candidate.
+- **Dynamic Serving Scaler**: Adjust servings (1x, 2x, 4x, or custom 1-12 portions) with real-time recalculation of ingredient quantities and formatted fractions (for example: 1/2 tbsp, 1 3/4 cups, 300g).
+- **Smart Ingredient Substitutions**: View realistic alternatives for dietary needs (e.g. dairy-free, vegetarian) and click to swap ingredients in-place.
+- **Checkable Steps & Timers**: Cross off completed cooking steps with real-time progress tracking. Steps with durations include interactive countdown timers and audio completion chimes.
+- **Focus Cooking Mode**: Distraction-free full-screen modal with large step text, ingredient callouts, and step navigation.
+- **Recipe Refinement**: Refine an existing recipe with follow-up instructions (e.g., "Make it spicy", "Under 15 minutes").
+- **Cookbook Storage**: Save favorite recipes to browser `localStorage` with options to copy ingredients or print recipe cards.
+- **Evaluator Test Bar**: Collapsible toolbar at the bottom of the studio allowing reviewers to trigger all 6 failure modes with one click.
 
 ---
 
-## ⏱️ 8. Time Spent Breakdown
+## 6. AI Usage Disclosure
 
-- **Architecture & JSON Schema Design (Step 1)**: ~45 mins
-- **Backend Proxy & Gemini/Mock Integration (Step 2 & 3)**: ~1 hour
-- **Validation Engine & Error Handling (`validateResult.ts`, `api.ts`)**: ~1.5 hours
-- **Interactive UI Components (Scalable Servings, Swaps, Focus Mode)**: ~2.5 hours
-- **Styling, Animations, Confetti & Sound Effects**: ~1.5 hours
-- **Testing, Failure Simulation Bar & Documentation**: ~1 hour
+In compliance with assessment requirements:
+- **AI Coding Tools**: Used for scaffolding TypeScript boilerplate, drafting Zod validation schemas, and accelerating styling structure.
+- **Independent Design & Logic**: Architecture, race-condition mitigation (`requestIdRef`), defensive stream handling, Web Audio chime synthesis, fraction scaling algorithms, and failure simulation testing were designed and reviewed by the candidate.
+
+---
+
+## 7. Time Spent Breakdown
+
+- Architecture and Schema Definition: ~45 mins
+- Backend Proxy and Gemini Integration: ~1 hour
+- Defensive Validation Engine & Error Handling: ~1.5 hours
+- Interactive UI Components & Cooking Mode: ~2.5 hours
+- Design System, Animations, and Sound Effects: ~1.5 hours
+- Testing, Verification, and Documentation: ~1 hour
 - **Total Time**: ~8 hours
-
----
-
-## 📦 9. Known Limitations & Next Steps
-
-1. **Voice Control**: Integrating Web Speech API for hands-free *"Next step"* voice commands while cooking.
-2. **Multi-Recipe Comparison**: Generating 2-3 variations (e.g. Quick vs Gourmet) from the same ingredients.
-3. **Pantry Inventory Sync**: Persisting full kitchen stock in IndexedDB.
