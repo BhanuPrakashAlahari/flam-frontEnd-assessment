@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   ChefHat, Bookmark, Sparkles, CheckCircle2, AlertTriangle, 
-  Refrigerator, Bug, Info, Menu, X 
+  Refrigerator, Bug, Info, Menu, X, Home 
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -35,7 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           const data = await res.json();
           setServerStatus({
             online: true,
-            provider: data.provider || 'AI Gateway',
+            provider: data.provider || 'Gemini 3 Flash',
             hasApiKey: !!data.hasApiKey,
           });
         } else {
@@ -48,7 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       } catch {
         setServerStatus({
           online: false,
-          provider: 'Server Offline (Check port 3001)',
+          provider: 'Server Offline (:3001)',
           hasApiKey: false,
         });
       }
@@ -60,47 +60,50 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, []);
 
   const navLinks = [
-    { path: '/', label: 'Studio', icon: <ChefHat className="w-4 h-4" /> },
-    { path: '/saved', label: 'Cookbook', icon: <Bookmark className="w-4 h-4" />, count: savedCount },
+    { path: '/', label: 'Home', icon: <Home className="w-4 h-4" /> },
+    { path: '/studio', label: 'Recipe Studio', icon: <ChefHat className="w-4 h-4" /> },
+    { path: '/cookbook', label: 'Cookbook', icon: <Bookmark className="w-4 h-4" />, count: savedCount },
     { path: '/pantry', label: 'Pantry Stock', icon: <Refrigerator className="w-4 h-4" /> },
     { path: '/diagnostics', label: 'Diagnostics', icon: <Bug className="w-4 h-4" /> },
     { path: '/about', label: 'Architecture', icon: <Info className="w-4 h-4" /> },
   ];
 
   const handleBrandClick = () => {
-    onNewRecipe();
     navigate('/');
     setMobileMenuOpen(false);
   };
 
+  const handleNewRecipeClick = () => {
+    onNewRecipe();
+    navigate('/studio');
+    setMobileMenuOpen(false);
+  };
+
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-md shadow-xs">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         {/* Left: Brand Logo */}
         <div 
           onClick={handleBrandClick}
-          className="flex items-center gap-3 cursor-pointer group select-none shrink-0"
+          className="flex items-center gap-2.5 cursor-pointer select-none shrink-0"
         >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/25 group-hover:scale-105 transition-transform">
-            <ChefHat className="w-6 h-6 text-white" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-sm shadow-blue-500/20">
+            <ChefHat className="w-5 h-5 text-white" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="font-display font-bold text-xl tracking-tight text-white group-hover:text-amber-400 transition-colors">
+            <div className="flex items-center gap-1.5">
+              <span className="font-display font-bold text-lg tracking-tight text-slate-900">
                 CulinaryCraft
               </span>
-              <span className="badge-tag bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] py-0.5 font-bold">
+              <span className="badge-tag bg-blue-50 border border-blue-200 text-blue-700 text-[10px] py-0 font-bold">
                 AI Studio
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 font-normal hidden sm:block">
-              Interactive Fridge-to-Recipe Engine
-            </p>
           </div>
         </div>
 
         {/* Center: Desktop Navigation Tabs */}
-        <nav className="hidden lg:flex items-center gap-1 bg-slate-900/80 border border-slate-800 p-1 rounded-xl">
+        <nav className="hidden lg:flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200">
           {navLinks.map((link) => {
             const isActive = location.pathname === link.path;
             return (
@@ -109,16 +112,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 to={link.path}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                   isActive
-                    ? 'bg-amber-500 text-slate-950 shadow-sm shadow-orange-500/20'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                    ? 'bg-white text-blue-700 shadow-xs border border-slate-200'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                 }`}
               >
                 {link.icon}
                 <span>{link.label}</span>
                 {link.count !== undefined && link.count > 0 && (
-                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                    isActive ? 'bg-slate-950 text-amber-400' : 'bg-amber-500/20 text-amber-400'
-                  }`}>
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">
                     {link.count}
                   </span>
                 )}
@@ -133,27 +134,25 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div 
             className={`hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
               serverStatus.online
-                ? serverStatus.hasApiKey
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                  : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                : 'bg-rose-50 border-rose-200 text-rose-700'
             }`}
             title={serverStatus.provider}
           >
             {serverStatus.online ? (
-              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             ) : (
-              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
             )}
-            <span className="truncate max-w-[150px]">
+            <span className="truncate max-w-[170px] font-medium">
               {serverStatus.provider}
             </span>
           </div>
 
-          {/* New Recipe CTA */}
+          {/* New Recipe Action */}
           <button
-            onClick={handleBrandClick}
-            className="btn-primary text-xs sm:text-sm py-1.5 px-3.5 rounded-xl flex items-center gap-1.5 shadow-md"
+            onClick={handleNewRecipeClick}
+            className="btn-primary text-xs sm:text-sm py-1.5 px-3.5 rounded-xl flex items-center gap-1.5"
           >
             <Sparkles className="w-4 h-4" />
             <span className="hidden sm:inline">New Recipe</span>
@@ -162,7 +161,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Mobile Hamburger Menu Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white bg-slate-900 border border-slate-800"
+            className="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 bg-slate-100 border border-slate-200"
             title="Toggle Menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -172,7 +171,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Navigation Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-800 bg-slate-950 p-4 space-y-2 animate-in fade-in">
+        <div className="lg:hidden border-t border-slate-200 bg-white p-4 space-y-2 animate-in fade-in shadow-lg">
           {navLinks.map((link) => {
             const isActive = location.pathname === link.path;
             return (
@@ -182,8 +181,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={() => setMobileMenuOpen(false)}
                 className={`p-3 rounded-xl text-sm font-semibold flex items-center justify-between transition-all ${
                   isActive
-                    ? 'bg-amber-500 text-slate-950 font-bold'
-                    : 'bg-slate-900/60 border border-slate-800 text-slate-300 hover:text-white'
+                    ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200'
+                    : 'bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -191,7 +190,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span>{link.label}</span>
                 </div>
                 {link.count !== undefined && link.count > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-950 text-amber-400">
+                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
                     {link.count}
                   </span>
                 )}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
+import { LandingPage } from './pages/LandingPage';
 import { StudioPage } from './pages/StudioPage';
 import { CookbookPage } from './pages/CookbookPage';
 import { PantryPage } from './pages/PantryPage';
@@ -28,7 +29,7 @@ export function App() {
   const [savedRecipes, setSavedRecipes] = useState<RecipeResult[]>([]);
 
   // Stale request / prompt memory
-  const [lastPrompt, setLastPrompt] = useState<string>('3 eggs, cheddar cheese, baby spinach, garlic');
+  const [lastPrompt, setLastPrompt] = useState<string>('');
   const [lastOptions, setLastOptions] = useState<GenerateOptions>({});
   const staleRequestIdRef = useRef<number>(0);
 
@@ -93,7 +94,7 @@ export function App() {
 
     const thisReqId = ++staleRequestIdRef.current;
 
-    const response = await generateRecipe(lastPrompt, {
+    const response = await generateRecipe(lastPrompt || recipe.title, {
       ...lastOptions,
       refinementPrompt: refinementText,
       previousRecipeTitle: recipe.title,
@@ -114,7 +115,11 @@ export function App() {
   };
 
   const handleRetry = () => {
-    handleGenerate(lastPrompt, lastOptions);
+    if (lastPrompt) {
+      handleGenerate(lastPrompt, lastOptions);
+    } else {
+      handleGenerate('3 eggs, cheddar cheese, baby spinach, garlic', {});
+    }
   };
 
   const handleUseFallback = () => {
@@ -179,7 +184,7 @@ export function App() {
 
   return (
     <Router>
-      <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+      <div className="min-h-screen flex flex-col bg-[#f8fafc] text-slate-900">
         {/* Top Navbar with Multi-Route Navigation */}
         <Navbar
           onNewRecipe={() => {
@@ -191,11 +196,23 @@ export function App() {
         />
 
         {/* Main Content Area Routing */}
-        <main className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
+        <main className="flex-1 container mx-auto px-4 py-6 max-w-6xl">
           <Routes>
-            {/* 1. Main Studio / Generator Route */}
+            {/* 1. Landing Page (Home) */}
             <Route
               path="/"
+              element={
+                <LandingPage
+                  onQuickStart={(quickPrompt) => {
+                    handleGenerate(quickPrompt, {});
+                  }}
+                />
+              }
+            />
+
+            {/* 2. Main Studio / Generator Route */}
+            <Route
+              path="/studio"
               element={
                 <StudioPage
                   recipe={recipe}
@@ -218,9 +235,9 @@ export function App() {
               }
             />
 
-            {/* 2. Cookbook / Saved Bookmarks Route */}
+            {/* 3. Cookbook / Saved Bookmarks Route */}
             <Route
-              path="/saved"
+              path="/cookbook"
               element={
                 <CookbookPage
                   savedRecipes={savedRecipes}
@@ -233,8 +250,10 @@ export function App() {
                 />
               }
             />
+            {/* Route alias for backwards compatibility */}
+            <Route path="/saved" element={<Navigate to="/cookbook" replace />} />
 
-            {/* 3. Virtual Pantry Stock Route */}
+            {/* 4. Virtual Pantry Stock Route */}
             <Route
               path="/pantry"
               element={
@@ -246,10 +265,10 @@ export function App() {
               }
             />
 
-            {/* 4. AI Diagnostics & Evaluation Lab Route */}
+            {/* 5. AI Diagnostics & Evaluation Lab Route */}
             <Route path="/diagnostics" element={<DiagnosticsPage />} />
 
-            {/* 5. Architecture & Rubric Specification Route */}
+            {/* 6. Architecture & Rubric Specification Route */}
             <Route path="/about" element={<AboutPage />} />
           </Routes>
         </main>
@@ -265,14 +284,14 @@ export function App() {
           />
         )}
 
-        {/* Footer */}
-        <footer className="border-t border-slate-800/80 bg-slate-950/80 py-6 text-center text-xs text-slate-500 no-print mt-12">
+        {/* Clean White & Slate Footer */}
+        <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500 no-print mt-12 shadow-xs">
           <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p>
-              CulinaryCraft • Flam Frontend Internship Assignment • AI Fridge-to-Recipe Interactive Studio
+            <p className="font-medium text-slate-700">
+              CulinaryCraft • Flam Frontend Internship Assignment • AI Interactive Fridge Studio
             </p>
-            <p className="text-slate-400">
-              Multi-Route Architecture • Protected Backend Proxy • Strict Zod JSON Validation
+            <p className="text-slate-500">
+              Multi-Route React Architecture • Google Gemini 3 Flash • Strict Zod JSON Parsing
             </p>
           </div>
         </footer>

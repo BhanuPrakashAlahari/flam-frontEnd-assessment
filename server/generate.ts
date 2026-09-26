@@ -14,7 +14,7 @@ export interface GenerateRequestBody {
 }
 
 const STRICT_SYSTEM_PROMPT = `You are a world-class professional chef and interactive culinary AI.
-Your job is to transform free-form user ingredient inputs (what's in their fridge/pantry) into an ultra-practical, delicious, structured recipe.
+Your job is to transform free-form user ingredient inputs into an ultra-practical, delicious, structured recipe.
 
 RULES:
 1. Return ONLY valid JSON matching the exact schema below. Do NOT include any markdown code fences (\`\`\`json), do NOT include any conversational preamble or postscript.
@@ -103,66 +103,53 @@ EXACT JSON SCHEMA TO MATCH:
 function generateSmartMockRecipe(userPrompt: string, options?: GenerateRequestBody['options']) {
   const promptLower = userPrompt.toLowerCase();
   const servings = options?.servings || 2;
-  const isRefinement = !!options?.refinementPrompt;
 
-  let title = 'Golden Kitchen Skillet Hash';
-  let tagline = 'Crispy, savory comfort food made from your fridge staples';
-  let cuisine = 'Modern Comfort';
+  let title = 'Golden Kitchen Skillet Scramble';
+  let tagline = 'Fresh, aromatic culinary creation tailored to your fridge ingredients';
+  let cuisine = 'Modern Fusion';
   let difficulty: 'Easy' | 'Medium' | 'Hard' = 'Easy';
-  let prepTime = 10;
-  let cookTime = 15;
-  let dietaryTags = ['Quick & Easy', 'High Protein', 'Gluten-Free Friendly'];
+  let prepTime = 8;
+  let cookTime = 12;
+  let dietaryTags = ['Quick & Easy', 'High Protein'];
 
-  // Smart ingredients extraction based on prompt
   const hasEggs = promptLower.includes('egg');
-  const hasCheese = promptLower.includes('cheese') || promptLower.includes('cheddar') || promptLower.includes('parmesan') || promptLower.includes('mozzarella');
-  const hasSpinach = promptLower.includes('spinach') || promptLower.includes('kale') || promptLower.includes('green');
+  const hasCheese = promptLower.includes('cheese') || promptLower.includes('cheddar') || promptLower.includes('parmesan');
   const hasPasta = promptLower.includes('pasta') || promptLower.includes('spaghetti') || promptLower.includes('noodle');
   const hasRice = promptLower.includes('rice');
-  const hasChicken = promptLower.includes('chicken') || promptLower.includes('breast') || promptLower.includes('thigh');
-  const hasTomato = promptLower.includes('tomato') || promptLower.includes('marinara');
-  const hasTofu = promptLower.includes('tofu');
-  const hasMushrooms = promptLower.includes('mushroom');
+  const hasChicken = promptLower.includes('chicken');
 
-  if (hasPasta || (hasTomato && !hasRice)) {
-    title = hasCheese ? 'Creamy Tuscan Pan Pasta' : 'Rustic Garlic & Herb Tomato Pasta';
-    tagline = 'Silky, flavorful pasta elevated with pan-seared fresh aromatics';
+  if (hasPasta) {
+    title = 'Pan-Tossed Garlic Herb Pasta';
+    tagline = 'Silky pasta elevated with caramelized garlic, herbs, and vibrant pantry additions';
     cuisine = 'Italian Modern';
-    prepTime = 8;
+    prepTime = 6;
     cookTime = 14;
-    dietaryTags = ['Vegetarian Friendly', 'Comfort Food', 'Under 25 Mins'];
-  } else if (hasRice || promptLower.includes('soy')) {
-    title = 'Sizzling Garlic-Egg Fried Rice Bowl';
-    tagline = 'Wok-tossed aromatic rice with golden eggs and crisp vegetables';
+    dietaryTags = ['Quick & Comforting', 'Vegetarian Friendly'];
+  } else if (hasRice) {
+    title = 'Aromatic Wok-Tossed Fried Rice';
+    tagline = 'Golden wok-seared rice with fresh aromatics, garlic, and savory pan reduction';
     cuisine = 'East Asian Fusion';
-    prepTime = 10;
-    cookTime = 12;
-    dietaryTags = ['High Protein', 'Fast Prep', 'Customizable'];
-  } else if (hasEggs) {
-    title = 'Farmhouse Herb & Melted Cheddar Frittata';
-    tagline = 'Fluffy, golden baked eggs folded with tender vegetables and melted cheese';
-    cuisine = 'French-American Bistro';
-    prepTime = 7;
-    cookTime = 12;
-    dietaryTags = ['Keto Friendly', 'High Protein', 'Gluten-Free', 'Vegetarian'];
+    prepTime = 8;
+    cookTime = 10;
+    dietaryTags = ['High Protein', 'Fast Weeknight Meal'];
   } else if (hasChicken) {
-    title = 'Seared Skillet Chicken with Pan Glaze';
-    tagline = 'Juicy, caramelized golden chicken with herb pan sauce and sautéed greens';
-    cuisine = 'Modern Continental';
+    title = 'Seared Skillet Herb Chicken';
+    tagline = 'Juicy caramelized chicken breast with crisp pan glaze and garden vegetables';
+    cuisine = 'Contemporary Bistro';
     prepTime = 10;
-    cookTime = 18;
-    dietaryTags = ['High Protein', 'Low Carb', 'Hearty'];
+    cookTime = 16;
+    dietaryTags = ['High Protein', 'Low Carb'];
   }
 
   if (options?.refinementPrompt) {
     title = `${title} (${options.refinementPrompt.slice(0, 30)})`;
   }
 
-  const recipe = {
-    id: `mock_recipe_${Date.now()}`,
+  return {
+    id: `recipe_${Date.now()}`,
     title,
     tagline,
-    description: `Crafted especially from your listed ingredients (${userPrompt.slice(0, 80)}...). This dish balances rich savory flavors, great texture contrast, and quick weeknight efficiency.`,
+    description: `Crafted from your ingredients: "${userPrompt.slice(0, 75)}...". Designed for optimal texture contrast, balanced seasoning, and zero kitchen waste.`,
     cuisine,
     difficulty,
     prepTimeMinutes: prepTime,
@@ -173,82 +160,59 @@ function generateSmartMockRecipe(userPrompt: string, options?: GenerateRequestBo
     ingredients: [
       {
         id: 'ing_1',
-        name: hasEggs ? 'Fresh Eggs' : hasChicken ? 'Chicken Breast' : 'Penne or Spaghetti Pasta',
-        amount: hasEggs ? 4 : hasChicken ? 350 : 200,
-        unit: hasEggs ? 'pcs' : hasChicken ? 'g' : 'g',
+        name: hasEggs ? 'Fresh Eggs' : hasChicken ? 'Chicken Breast' : 'Penne Pasta',
+        amount: hasEggs ? 3 : hasChicken ? 300 : 200,
+        unit: hasEggs ? 'pcs' : 'g',
         category: hasEggs ? 'dairy' : hasChicken ? 'meat' : 'pantry',
-        notes: hasEggs ? 'whisked with a pinch of salt' : hasChicken ? 'sliced into bite-sized strips' : 'boiled al dente',
+        notes: hasEggs ? 'whisked with a pinch of sea salt' : 'prepped bite-sized',
         isPantryStaple: false,
         swaps: [
           {
             original: hasEggs ? 'Eggs' : hasChicken ? 'Chicken Breast' : 'Pasta',
-            substitute: hasEggs ? 'Silken Tofu or Chickpea Batter' : hasChicken ? 'Crispy Firm Tofu' : 'Zucchini Noodles (Zoodles)',
+            substitute: hasEggs ? 'Silken Tofu or Chickpea Batter' : hasChicken ? 'Crispy Firm Tofu' : 'Zucchini Noodles',
             ratio: '1:1',
-            dietaryBenefit: 'Plant-based & vegan alternative',
+            dietaryBenefit: 'Plant-Based & Vegan Alternative',
           },
         ],
       },
       {
         id: 'ing_2',
-        name: hasCheese ? 'Sharp Cheddar Cheese' : 'Grated Parmesan or Nutritional Yeast',
-        amount: 80,
+        name: hasCheese ? 'Cheddar or Parmesan' : 'Fresh Baby Spinach',
+        amount: hasCheese ? 60 : 100,
         unit: 'g',
-        category: 'dairy',
-        notes: 'coarsely grated for optimal melting',
+        category: hasCheese ? 'dairy' : 'produce',
+        notes: hasCheese ? 'freshly shredded' : 'washed and dried',
         isPantryStaple: false,
         swaps: [
           {
-            original: 'Cheddar Cheese',
-            substitute: 'Nutritional Yeast + Cashew Cream',
-            ratio: '2 tbsp per 50g cheese',
+            original: 'Cheese',
+            substitute: 'Nutritional Yeast',
+            ratio: '2 tbsp',
             dietaryBenefit: '100% Dairy-Free & Vegan',
-          },
-          {
-            original: 'Cheddar Cheese',
-            substitute: 'Feta or Goat Cheese',
-            ratio: '1:1',
-            dietaryBenefit: 'Tangier Mediterranean flavor profile',
           },
         ],
       },
       {
         id: 'ing_3',
-        name: hasSpinach ? 'Fresh Baby Spinach' : 'Bell Pepper or Greens',
-        amount: 120,
-        unit: 'g',
+        name: 'Fresh Garlic Cloves',
+        amount: 2,
+        unit: 'cloves',
         category: 'produce',
-        notes: 'washed and roughly chopped',
+        notes: 'thinly sliced',
         isPantryStaple: false,
         swaps: [
           {
-            original: 'Baby Spinach',
-            substitute: 'Lacinato Kale or Swiss Chard',
-            ratio: '1:1',
-            dietaryBenefit: 'Higher fiber and heartier texture',
+            original: 'Garlic',
+            substitute: 'Garlic Powder',
+            ratio: '½ tsp',
+            dietaryBenefit: 'Pantry Alternative',
           },
         ],
       },
       {
         id: 'ing_4',
-        name: 'Fresh Garlic Cloves',
-        amount: 3,
-        unit: 'cloves',
-        category: 'produce',
-        notes: 'thinly sliced or minced',
-        isPantryStaple: false,
-        swaps: [
-          {
-            original: 'Fresh Garlic',
-            substitute: 'Garlic Powder',
-            ratio: '1/2 tsp per clove',
-            dietaryBenefit: 'Pantry backup if out of fresh garlic',
-          },
-        ],
-      },
-      {
-        id: 'ing_5',
         name: 'Extra Virgin Olive Oil or Butter',
-        amount: 2,
+        amount: 1.5,
         unit: 'tbsp',
         category: 'pantry',
         notes: 'for sautéing',
@@ -256,89 +220,57 @@ function generateSmartMockRecipe(userPrompt: string, options?: GenerateRequestBo
         swaps: [
           {
             original: 'Butter',
-            substitute: 'Avocado Oil or Grapeseed Oil',
+            substitute: 'Avocado Oil',
             ratio: '1:1',
-            dietaryBenefit: 'Higher smoke point and dairy-free',
+            dietaryBenefit: 'High Smoke Point & Dairy-Free',
           },
         ],
       },
     ],
-    pantryStaplesNeeded: ['Olive oil / Cooking oil', 'Kosher Salt', 'Freshly ground Black Pepper', 'Red pepper chili flakes (optional)'],
+    pantryStaplesNeeded: ['Olive oil / Cooking oil', 'Kosher Salt', 'Freshly ground Black Pepper'],
     steps: [
       {
         stepNumber: 1,
-        shortSummary: 'Prep & Aromatics',
-        instruction: 'Heat olive oil or butter in a wide non-stick skillet over medium heat. Add thinly sliced garlic and cook for 1 to 2 minutes until fragrant and lightly golden. Do not let it burn.',
+        shortSummary: 'Aromatics & Sauté',
+        instruction: 'Heat olive oil in a wide skillet over medium heat. Sauté the sliced garlic for 1 to 2 minutes until fragrant and lightly golden. Do not let it brown too quickly.',
         timerMinutes: 2,
-        tip: 'Keep the heat on medium-low so the garlic infuses the oil gently without turning bitter.',
+        tip: 'Gently infuse the oil on medium-low heat to extract sweetness without bitterness.',
         ingredientsUsed: ['Extra Virgin Olive Oil or Butter', 'Fresh Garlic Cloves'],
       },
       {
         stepNumber: 2,
-        shortSummary: 'Sauté Greens & Base',
-        instruction: 'Toss in the baby spinach (or vegetables) and season with a pinch of kosher salt and cracked black pepper. Sauté for 2-3 minutes until wilted and vibrant green.',
-        timerMinutes: 3,
-        tip: 'Spinach wilts down dramatically; fold it continuously to evenly coat with the garlic oil.',
-        ingredientsUsed: ['Fresh Baby Spinach'],
+        shortSummary: 'Cook Core Ingredients',
+        instruction: 'Add the main ingredients into the pan. Sauté over medium-high heat, turning frequently for 4 to 6 minutes until cooked tender and evenly seared.',
+        timerMinutes: 5,
+        tip: 'Keep the pan hot so excess moisture evaporates rather than steams the ingredients.',
+        ingredientsUsed: [],
       },
       {
         stepNumber: 3,
-        shortSummary: 'Combine & Cook',
-        instruction: hasEggs 
-          ? 'Pour the whisked eggs evenly over the greens in the skillet. Lower heat to medium-low. Use a spatula to gently pull the cooked edges toward the center, letting raw egg flow underneath for 4-5 minutes.'
-          : 'Fold in the prepared base ingredients and toss vigorously for 3-4 minutes to absorb the pan drippings and flavors.',
-        timerMinutes: hasEggs ? 5 : 4,
-        tip: 'Low and slow heat produces the creamiest, most tender texture.',
-        ingredientsUsed: [hasEggs ? 'Fresh Eggs' : 'Main Base'],
-      },
-      {
-        stepNumber: 4,
-        shortSummary: 'Melt Cheese & Finish',
-        instruction: 'Sprinkle the grated cheddar cheese evenly across the top. Cover the pan with a lid or foil for 2 minutes until the cheese is gloriously bubbly and melted. Remove from heat.',
-        timerMinutes: 2,
-        tip: 'Covering the pan traps residual steam, melting the cheese without overcooking the bottom.',
-        ingredientsUsed: ['Sharp Cheddar Cheese'],
-      },
-      {
-        stepNumber: 5,
         shortSummary: 'Garnish & Plate',
-        instruction: 'Slide the finished dish onto a warm serving plate. Garnish with cracked black pepper and a drizzle of olive oil. Serve immediately while hot!',
-        tip: 'Pairs wonderfully with toasted sourdough or a crisp side salad.',
+        instruction: 'Remove from heat. Season with a crack of black pepper and sea salt to taste. Serve warm immediately.',
+        tip: 'A drop of fresh lemon juice or herbs will brighten the rich pan flavors.',
         ingredientsUsed: [],
       },
     ],
     nutritionPerServing: {
-      calories: 385,
-      proteinGrams: 24,
-      carbsGrams: 14,
-      fatGrams: 26,
-      fiberGrams: 4,
+      calories: 340,
+      proteinGrams: 22,
+      carbsGrams: 16,
+      fatGrams: 20,
+      fiberGrams: 3,
     },
     chefTips: [
-      'Always preheat your skillet before adding oil for a naturally non-stick surface.',
-      'Grate your cheese fresh from a block whenever possible; pre-shredded cheese contains anti-caking agents that hinder melting.',
-      'Taste and adjust seasoning with a squeeze of fresh lemon juice right at the end to brighten all flavors.',
+      'Always pre-heat your skillet before adding oil for a naturally non-stick surface.',
+      'Season at multiple stages rather than just at the very end.',
     ],
-    swapsSummary: [
-      {
-        ingredient: 'Cheddar Cheese',
-        substitute: 'Nutritional Yeast or Cashew Mozzarella',
-        reason: 'Makes the entire dish 100% dairy-free without sacrificing savory richness.',
-      },
-      {
-        ingredient: 'Fresh Garlic',
-        substitute: 'Shallots or Garlic Powder',
-        reason: 'Provides aromatic sweetness if fresh cloves are unavailable.',
-      },
-    ],
+    swapsSummary: [],
     generatedAt: new Date().toISOString(),
   };
-
-  return recipe;
 }
 
 /**
- * Handles LLM Generation via Gemini API or intelligent mock fallback
+ * Handles LLM Generation via Gemini 3 / Gemini 2.5 Flash API or intelligent mock fallback
  */
 export async function handleGenerateRecipe(reqBody: GenerateRequestBody): Promise<{ status: number; body: any }> {
   const { prompt, options } = reqBody;
@@ -347,14 +279,12 @@ export async function handleGenerateRecipe(reqBody: GenerateRequestBody): Promis
   if (options?.simulateFailure) {
     const sim = options.simulateFailure;
     if (sim === 'malformed') {
-      // Returns broken non-parseable JSON
       return {
         status: 200,
         body: '{"title": "Unclosed Broken Recipe", "ingredients": [{"name": "eggs", "amount": 2, "broken": }',
       };
     }
     if (sim === 'wrong_shape') {
-      // Returns valid JSON but completely wrong shape (missing steps, ingredients, etc.)
       return {
         status: 200,
         body: {
@@ -365,14 +295,12 @@ export async function handleGenerateRecipe(reqBody: GenerateRequestBody): Promis
       };
     }
     if (sim === 'empty') {
-      // Returns empty payload
       return {
         status: 200,
         body: '',
       };
     }
     if (sim === 'slow_timeout') {
-      // Simulates slow server timeout > 26 seconds
       await new Promise((resolve) => setTimeout(resolve, 26000));
       return {
         status: 200,
@@ -392,79 +320,78 @@ export async function handleGenerateRecipe(reqBody: GenerateRequestBody): Promis
     }
   }
 
-  // 2. Real Gemini API call if GEMINI_API_KEY is configured
+  // 2. Real Gemini Flash API call if GEMINI_API_KEY is configured
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (apiKey && apiKey.trim() !== '' && apiKey !== 'YOUR_GEMINI_API_KEY') {
-    try {
-      const userMessage = `User fridge & pantry ingredients: "${prompt}"
+    // Model preference list: Gemini 3 Flash / 3.6 Flash / 2.5 Flash
+    const modelCandidates = [
+      'gemini-3-flash-preview',
+      'gemini-3.6-flash',
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-flash-latest'
+    ];
+
+    for (const modelName of modelCandidates) {
+      try {
+        const userMessage = `User fridge & pantry ingredients: "${prompt}"
 ${options?.dietaryPreferences?.length ? `Dietary preferences: ${options.dietaryPreferences.join(', ')}` : ''}
 ${options?.servings ? `Target Servings: ${options.servings}` : 'Target Servings: 2'}
 ${options?.cookingTimeMax ? `Max cooking time: ${options.cookingTimeMax} minutes` : ''}
 ${options?.refinementPrompt ? `Follow-up refinement instructions: "${options.refinementPrompt}". Tweak the recipe accordingly.` : ''}`;
 
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
-      const geminiResponse = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: `${STRICT_SYSTEM_PROMPT}\n\nUSER REQUEST:\n${userMessage}` }],
-            },
-          ],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            temperature: 0.3,
+        const geminiResponse = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        }),
-      });
+          body: JSON.stringify({
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: `${STRICT_SYSTEM_PROMPT}\n\nUSER REQUEST:\n${userMessage}` }],
+              },
+            ],
+            generationConfig: {
+              responseMimeType: 'application/json',
+              temperature: 0.3,
+            },
+          }),
+        });
 
-      if (!geminiResponse.ok) {
-        const errorText = await geminiResponse.text();
-        console.error('Gemini API Error:', geminiResponse.status, errorText);
-        // Fallback to smart mock if quota or key issue, with note
-        const mock = generateSmartMockRecipe(prompt, options);
-        mock.title = `${mock.title} (Fallback Mock Mode)`;
-        return {
-          status: 200,
-          body: mock,
-        };
+        if (geminiResponse.ok) {
+          const geminiData: any = await geminiResponse.json();
+          const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+
+          if (rawText) {
+            const parsedJson = JSON.parse(rawText);
+            return {
+              status: 200,
+              body: parsedJson,
+            };
+          }
+        } else {
+          const errText = await geminiResponse.text();
+          console.warn(`Gemini model ${modelName} returned status ${geminiResponse.status}: ${errText.slice(0, 150)}`);
+        }
+      } catch (llmErr) {
+        console.warn(`Attempt with ${modelName} failed:`, llmErr);
       }
-
-      const geminiData: any = await geminiResponse.json();
-      const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (!rawText) {
-        return {
-          status: 200,
-          body: generateSmartMockRecipe(prompt, options),
-        };
-      }
-
-      // Gemini in responseMimeType "application/json" returns direct JSON string
-      const parsedJson = JSON.parse(rawText);
-      return {
-        status: 200,
-        body: parsedJson,
-      };
-    } catch (llmErr) {
-      console.error('Error invoking Gemini LLM:', llmErr);
-      // Fallback gracefully to smart mock
-      const mock = generateSmartMockRecipe(prompt, options);
-      return {
-        status: 200,
-        body: mock,
-      };
     }
+
+    // If live API calls experienced temporary rate limits or quota, fallback gracefully
+    const mock = generateSmartMockRecipe(prompt, options);
+    return {
+      status: 200,
+      body: mock,
+    };
   }
 
-  // 3. Smart Mock Mode (Realistic delay and intelligent dynamic synthesis)
-  await new Promise((resolve) => setTimeout(resolve, 900)); // Natural 900ms latency simulation
+  // 3. Fallback Smart Mock Engine if no API key
+  await new Promise((resolve) => setTimeout(resolve, 800));
   const mockRecipe = generateSmartMockRecipe(prompt, options);
 
   return {

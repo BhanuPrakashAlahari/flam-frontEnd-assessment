@@ -92,45 +92,43 @@ export const PantryPage: React.FC<PantryPageProps> = ({ onGenerateFromPantry }) 
     if (selectedNames.length === 0) return;
 
     onGenerateFromPantry(selectedNames.join(', '));
-    navigate('/');
+    navigate('/studio');
   };
 
   const categories = [
-    { key: 'produce', label: '🥬 Fresh Produce', color: 'emerald' },
-    { key: 'dairy', label: '🧀 Dairy & Eggs', color: 'amber' },
-    { key: 'protein', label: '🥩 Meat & Proteins', color: 'rose' },
-    { key: 'grains', label: '🍚 Grains & Base Staples', color: 'cyan' },
-    { key: 'spices', label: '🌿 Oils, Herbs & Sauces', color: 'purple' },
+    { key: 'produce', label: '🥬 Fresh Produce' },
+    { key: 'dairy', label: '🧀 Dairy & Eggs' },
+    { key: 'protein', label: '🥩 Meat & Proteins' },
+    { key: 'grains', label: '🍚 Grains & Base Staples' },
+    { key: 'spices', label: '🌿 Oils, Herbs & Sauces' },
   ] as const;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Header Banner */}
-      <div className="glass-panel p-6 sm:p-8 border border-slate-800 bg-slate-900/90 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-emerald-500/10 via-amber-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
-
+      <div className="glass-panel p-6 sm:p-8 border border-slate-200 bg-white relative overflow-hidden shadow-sm">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
                 <Refrigerator className="w-5 h-5" />
               </div>
-              <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                 Virtual Kitchen & Pantry Stock
               </h1>
             </div>
-            <p className="text-sm text-slate-400">
-              Check off ingredients currently in your fridge, freezer, or pantry to synthesize custom recipes.
+            <p className="text-sm text-slate-600">
+              Select items available in your fridge or pantry to synthesize custom interactive recipes.
             </p>
           </div>
 
-          {/* Floating Action Button */}
+          {/* Action Button */}
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={handleGenerate}
               disabled={selectedIds.length === 0}
-              className="btn-primary text-xs sm:text-sm py-2.5 px-5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-orange-500/20 disabled:opacity-50"
+              className="btn-primary text-xs sm:text-sm py-2.5 px-5 rounded-xl font-bold flex items-center gap-2 shadow-sm disabled:opacity-50"
             >
               <Sparkles className="w-4 h-4" />
               <span>Synthesize from Stock ({selectedIds.length})</span>
@@ -141,10 +139,10 @@ export const PantryPage: React.FC<PantryPageProps> = ({ onGenerateFromPantry }) 
       </div>
 
       {/* Quick Add Custom Item Bar */}
-      <div className="glass-panel p-4 sm:p-5 border border-slate-800 bg-slate-900/70">
+      <div className="glass-panel p-4 sm:p-5 border border-slate-200 bg-white shadow-xs">
         <form onSubmit={handleAddCustom} className="flex flex-col sm:flex-row items-center gap-3">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider shrink-0">
-            <Plus className="w-4 h-4 text-emerald-400" />
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider shrink-0">
+            <Plus className="w-4 h-4 text-blue-600" />
             <span>Add Custom Ingredient:</span>
           </div>
 
@@ -153,13 +151,13 @@ export const PantryPage: React.FC<PantryPageProps> = ({ onGenerateFromPantry }) 
             value={customItemName}
             onChange={(e) => setCustomItemName(e.target.value)}
             placeholder="e.g. Kimchi, Coconut Milk, Goat Cheese..."
-            className="flex-1 w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+            className="flex-1 w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
           />
 
           <select
             value={customCategory}
             onChange={(e) => setCustomCategory(e.target.value as any)}
-            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-emerald-500"
+            className="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-blue-500 font-medium"
           >
             <option value="produce">Produce</option>
             <option value="dairy">Dairy / Eggs</option>
@@ -171,7 +169,7 @@ export const PantryPage: React.FC<PantryPageProps> = ({ onGenerateFromPantry }) 
           <button
             type="submit"
             disabled={!customItemName.trim()}
-            className="btn-secondary text-xs py-2 px-4 rounded-xl border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10 shrink-0 font-semibold"
+            className="btn-secondary text-xs py-2 px-4 rounded-xl border-blue-200 text-blue-700 hover:bg-blue-50 shrink-0 font-semibold"
           >
             Add to Pantry
           </button>
@@ -179,9 +177,9 @@ export const PantryPage: React.FC<PantryPageProps> = ({ onGenerateFromPantry }) 
       </div>
 
       {/* Selected Items Counter Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400 px-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 px-2">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-white">{selectedIds.length} items selected</span>
+          <span className="font-semibold text-slate-900">{selectedIds.length} items selected</span>
           <span>• Click any item card to toggle in/out of stock</span>
         </div>
 
@@ -189,7 +187,7 @@ export const PantryPage: React.FC<PantryPageProps> = ({ onGenerateFromPantry }) 
           <button
             type="button"
             onClick={() => setSelectedIds(items.map((i) => i.id))}
-            className="text-amber-400 hover:text-amber-300 underline font-medium"
+            className="text-blue-600 hover:text-blue-700 underline font-semibold"
           >
             Select All
           </button>
@@ -197,7 +195,7 @@ export const PantryPage: React.FC<PantryPageProps> = ({ onGenerateFromPantry }) 
           <button
             type="button"
             onClick={() => setSelectedIds([])}
-            className="text-slate-400 hover:text-slate-200 underline font-medium"
+            className="text-slate-500 hover:text-slate-700 underline font-medium"
           >
             Clear All
           </button>
@@ -211,9 +209,9 @@ export const PantryPage: React.FC<PantryPageProps> = ({ onGenerateFromPantry }) 
           if (categoryItems.length === 0) return null;
 
           return (
-            <div key={cat.key} className="glass-panel p-6 border border-slate-800 bg-slate-900/60 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
-                <h3 className="font-display font-bold text-base text-white flex items-center gap-2">
+            <div key={cat.key} className="glass-panel p-6 border border-slate-200 bg-white space-y-4 shadow-xs">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="font-display font-bold text-base text-slate-900 flex items-center gap-2">
                   <span>{cat.label}</span>
                 </h3>
                 <span className="text-xs text-slate-500">
@@ -231,8 +229,8 @@ export const PantryPage: React.FC<PantryPageProps> = ({ onGenerateFromPantry }) 
                       onClick={() => toggleItem(item.id)}
                       className={`p-3 rounded-xl border cursor-pointer select-none transition-all flex items-center justify-between gap-2 ${
                         isSelected
-                          ? 'bg-emerald-500/15 border-emerald-500/50 text-white shadow-sm'
-                          : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                          ? 'bg-blue-50 border-blue-300 text-blue-900 shadow-xs'
+                          : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-white'
                       }`}
                     >
                       <span className="text-xs sm:text-sm font-medium line-clamp-1">
@@ -241,8 +239,8 @@ export const PantryPage: React.FC<PantryPageProps> = ({ onGenerateFromPantry }) 
 
                       <div className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-colors ${
                         isSelected
-                          ? 'bg-emerald-500 border-emerald-400 text-slate-950'
-                          : 'border-slate-700 bg-slate-900'
+                          ? 'bg-blue-600 border-blue-600 text-white'
+                          : 'border-slate-300 bg-white'
                       }`}>
                         {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                       </div>

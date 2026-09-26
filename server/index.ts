@@ -21,7 +21,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'online',
     timestamp: new Date().toISOString(),
-    provider: hasGeminiKey ? 'Gemini 1.5 Flash (Live API)' : 'Intelligent Culinary Mock Engine (Offline Mode)',
+    provider: hasGeminiKey ? 'Gemini 3 Flash (Live AI)' : 'Intelligent Culinary Mock Engine (Offline Mode)',
     hasApiKey: hasGeminiKey,
   });
 });
@@ -60,5 +60,5 @@ app.post('/api/generate', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🍳 Culinary AI Backend Proxy listening at http://localhost:${PORT}`);
-  console.log(`📡 Ready to safely forward requests without exposing API keys to the browser.`);
+  console.log(`📡 Ready to safely forward requests to Gemini 3 Flash without exposing API keys.`);
 });
