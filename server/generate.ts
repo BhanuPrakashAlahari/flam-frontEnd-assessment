@@ -1,4 +1,6 @@
 import dotenv from 'dotenv';
+import { validateCulinaryInput } from '../src/lib/culinaryValidation';
+
 dotenv.config();
 
 export interface GenerateRequestBody {
@@ -11,6 +13,19 @@ export interface GenerateRequestBody {
     previousRecipeTitle?: string;
     simulateFailure?: 'malformed' | 'wrong_shape' | 'empty' | 'slow_timeout' | 'server_error' | null;
   };
+}
+
+/**
+ * Strips markdown fences if present (```json ... ```)
+ */
+function cleanJson(raw: string): string {
+  if (!raw || typeof raw !== 'string') return '';
+  let trimmed = raw.trim();
+  if (trimmed.startsWith('```')) {
+    trimmed = trimmed.replace(/^```(?:json)?\s*/i, '');
+    trimmed = trimmed.replace(/\s*```$/, '');
+  }
+  return trimmed.trim();
 }
 
 const STRICT_SYSTEM_PROMPT = `You are a world-class professional chef and interactive culinary AI.
@@ -106,9 +121,6 @@ EXACT JSON SCHEMA TO MATCH:
     }
   ]
 }`;
-
-import { validateCulinaryInput } from '../src/lib/culinaryValidation';
-
 
 /**
  * Generates an intelligent, realistic recipe from user ingredients when running offline or testing
@@ -286,150 +298,159 @@ function generateSmartMockRecipe(userPrompt: string, options?: GenerateRequestBo
  * Handles LLM Generation via Gemini Flash API or intelligent mock fallback
  */
 export async function handleGenerateRecipe(reqBody: GenerateRequestBody): Promise<{ status: number; body: any }> {
-  const { prompt, options } = reqBody;
+  try {
+    const { prompt, options } = reqBody;
 
-  // 1. Explicit failure simulation endpoints (for test evaluation)
-  if (options?.simulateFailure) {
-    const sim = options.simulateFailure;
-    if (sim === 'malformed') {
-      return {
-        status: 200,
-        body: '{"title": "Unclosed Broken Recipe", "ingredients": [{"name": "eggs", "amount": 2, "broken": }',
-      };
+    // 1. Explicit failure simulation endpoints (for test evaluation)
+    if (options?.simulateFailure) {
+      const sim = options.simulateFailure;
+      if (sim === 'malformed') {
+        return {
+          status: 200,
+          body: '{"title": "Unclosed Broken Recipe", "ingredients": [{"name": "eggs", "amount": 2, "broken": }',
+        };
+      }
+      if (sim === 'wrong_shape') {
+        return {
+          status: 200,
+          body: {
+            status: 'ok',
+            message: 'Here is a friendly recipe for you!',
+            someRandomArray: [1, 2, 3],
+          },
+        };
+      }
+      if (sim === 'empty') {
+        return {
+          status: 200,
+          body: '',
+        };
+      }
+      if (sim === 'slow_timeout') {
+        await new Promise((resolve) => setTimeout(resolve, 26000));
+        return {
+          status: 200,
+          body: generateSmartMockRecipe(prompt, options),
+        };
+      }
+      if (sim === 'server_error') {
+        return {
+          status: 500,
+          body: {
+            error: {
+              title: 'Simulated LLM Gateway 500 Error',
+              message: 'Upstream AI model gateway temporarily unavailable (503 Service Unavailable).',
+            },
+          },
+        };
+      }
     }
-    if (sim === 'wrong_shape') {
+
+    // 2. Strict Intent Validation: Check whether the user entered cooking/ingredient info
+    const culinaryCheck = validateCulinaryInput(prompt);
+    if (!culinaryCheck.isValid) {
       return {
-        status: 200,
-        body: {
-          status: 'ok',
-          message: 'Here is a friendly recipe for you!',
-          someRandomArray: [1, 2, 3],
-        },
-      };
-    }
-    if (sim === 'empty') {
-      return {
-        status: 200,
-        body: '',
-      };
-    }
-    if (sim === 'slow_timeout') {
-      await new Promise((resolve) => setTimeout(resolve, 26000));
-      return {
-        status: 200,
-        body: generateSmartMockRecipe(prompt, options),
-      };
-    }
-    if (sim === 'server_error') {
-      return {
-        status: 500,
+        status: 400,
         body: {
           error: {
-            title: 'Simulated LLM Gateway 500 Error',
-            message: 'Upstream AI model gateway temporarily unavailable (503 Service Unavailable).',
+            type: 'INVALID_PROMPT',
+            title: 'Non-Cooking Input Detected',
+            message: culinaryCheck.reason || 'Please enter cooking ingredients, pantry items, or food notes (for example: eggs, garlic, spinach, pasta, chicken).',
           },
         },
       };
     }
-  }
 
-  // 2. Strict Intent Validation: Check whether the user entered cooking/ingredient info
-  const culinaryCheck = validateCulinaryInput(prompt);
-  if (!culinaryCheck.isValid) {
-    return {
-      status: 400,
-      body: {
-        error: {
-          type: 'INVALID_PROMPT',
-          title: 'Non-Cooking Input Detected',
-          message: culinaryCheck.reason || 'Please enter cooking ingredients, pantry items, or food notes (for example: eggs, garlic, spinach, pasta, chicken).',
-        },
-      },
-    };
-  }
+    // 3. Real Gemini Flash API call if GEMINI_API_KEY is configured
+    const apiKey = process.env.GEMINI_API_KEY;
 
+    if (apiKey && apiKey.trim() !== '' && apiKey !== 'YOUR_GEMINI_API_KEY') {
+      const modelCandidates = [
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
+        'gemini-1.5-flash-8b',
+        'gemini-1.5-pro'
+      ];
 
-  // 3. Real Gemini Flash API call if GEMINI_API_KEY is configured
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (apiKey && apiKey.trim() !== '' && apiKey !== 'YOUR_GEMINI_API_KEY') {
-    const modelCandidates = [
-      'gemini-3-flash-preview',
-      'gemini-3.6-flash',
-      'gemini-2.5-flash',
-      'gemini-2.0-flash',
-      'gemini-flash-latest'
-    ];
-
-    for (const modelName of modelCandidates) {
-      try {
-        const userMessage = `User fridge & pantry ingredients: "${prompt}"
+      for (const modelName of modelCandidates) {
+        try {
+          const userMessage = `User fridge & pantry ingredients: "${prompt}"
 ${options?.dietaryPreferences?.length ? `Dietary preferences: ${options.dietaryPreferences.join(', ')}` : ''}
 ${options?.servings ? `Target Servings: ${options.servings}` : 'Target Servings: 2'}
 ${options?.cookingTimeMax ? `Max cooking time: ${options.cookingTimeMax} minutes` : ''}
 ${options?.refinementPrompt ? `Follow-up refinement instructions: "${options.refinementPrompt}". Tweak the recipe accordingly.` : ''}`;
 
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
-        const geminiResponse = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                role: 'user',
-                parts: [{ text: `${STRICT_SYSTEM_PROMPT}\n\nUSER REQUEST:\n${userMessage}` }],
-              },
-            ],
-            generationConfig: {
-              responseMimeType: 'application/json',
-              temperature: 0.3,
+          const geminiResponse = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
             },
-          }),
-        });
+            body: JSON.stringify({
+              contents: [
+                {
+                  role: 'user',
+                  parts: [{ text: `${STRICT_SYSTEM_PROMPT}\n\nUSER REQUEST:\n${userMessage}` }],
+                },
+              ],
+              generationConfig: {
+                responseMimeType: 'application/json',
+                temperature: 0.3,
+              },
+            }),
+          });
 
-        if (geminiResponse.ok) {
-          const geminiData: any = await geminiResponse.json();
-          const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (geminiResponse.ok) {
+            const geminiData: any = await geminiResponse.json();
+            const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
 
-          if (rawText) {
-            const parsedJson = JSON.parse(rawText);
-            if (parsedJson?.error?.title) {
+            if (rawText) {
+              const cleaned = cleanJson(rawText);
+              const parsedJson = JSON.parse(cleaned);
+              if (parsedJson?.error?.title) {
+                return {
+                  status: 400,
+                  body: parsedJson,
+                };
+              }
               return {
-                status: 400,
+                status: 200,
                 body: parsedJson,
               };
             }
-            return {
-              status: 200,
-              body: parsedJson,
-            };
+          } else {
+            const errText = await geminiResponse.text();
+            console.warn(`Gemini model ${modelName} returned status ${geminiResponse.status}: ${errText.slice(0, 150)}`);
           }
-        } else {
-          const errText = await geminiResponse.text();
-          console.warn(`Gemini model ${modelName} returned status ${geminiResponse.status}: ${errText.slice(0, 150)}`);
+        } catch (llmErr) {
+          console.warn(`Attempt with ${modelName} failed:`, llmErr);
         }
-      } catch (llmErr) {
-        console.warn(`Attempt with ${modelName} failed:`, llmErr);
       }
+
+      // Fallback if live API temporary issue
+      const mock = generateSmartMockRecipe(prompt, options);
+      return {
+        status: 200,
+        body: mock,
+      };
     }
 
-    // Fallback if live API temporary issue
-    const mock = generateSmartMockRecipe(prompt, options);
+    // 4. Fallback Smart Mock Engine if no API key
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    const mockRecipe = generateSmartMockRecipe(prompt, options);
+
+    return {
+      status: 200,
+      body: mockRecipe,
+    };
+  } catch (error: any) {
+    console.error('Error in handleGenerateRecipe:', error);
+    // Graceful fallback to smart mock instead of crashing
+    const mock = generateSmartMockRecipe(reqBody.prompt || 'eggs, spinach, garlic', reqBody.options);
     return {
       status: 200,
       body: mock,
     };
   }
-
-  // 4. Fallback Smart Mock Engine if no API key
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  const mockRecipe = generateSmartMockRecipe(prompt, options);
-
-  return {
-    status: 200,
-    body: mockRecipe,
-  };
 }

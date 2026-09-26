@@ -20,7 +20,16 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { prompt, options } = req.body || {};
+    let bodyData = req.body;
+    if (typeof bodyData === 'string') {
+      try {
+        bodyData = JSON.parse(bodyData);
+      } catch {
+        // use as-is
+      }
+    }
+
+    const { prompt, options } = bodyData || {};
 
     if (!prompt || typeof prompt !== 'string' || prompt.trim() === '') {
       return res.status(400).json({
