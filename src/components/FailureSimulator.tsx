@@ -16,91 +16,80 @@ export const FailureSimulator: React.FC<FailureSimulatorProps> = ({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="simulator-bar border border-amber-200 bg-amber-50/70 rounded-2xl text-xs overflow-hidden shadow-2xs">
-      <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-amber-900 font-medium">
-          <Bug className="w-4 h-4 text-amber-600 shrink-0" />
-          <span className="font-bold">Assignment Evaluator Bar:</span>
-          <span className="text-amber-800 hidden sm:inline">
-            Test and trigger realistic AI failure modes on demand
-          </span>
+    <div className="border border-slate-200 bg-slate-50/60 rounded-xl text-xs overflow-hidden">
+      <div className="px-4 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-slate-600">
+          <Bug className="w-3.5 h-3.5 text-slate-400" />
+          <span className="font-semibold text-slate-700">Assignment Rubric: AI Failure Simulator</span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center gap-1 text-amber-800 hover:text-amber-950 font-semibold py-1 px-2.5 rounded-lg bg-white border border-amber-300 shadow-2xs transition-colors"
-          >
-            <span>{isOpen ? 'Hide Test Triggers' : 'Show Error Test Scenarios'}</span>
-            {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          </button>
-        </div>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+        >
+          <span>{isOpen ? 'Close' : 'Open Test Harness'}</span>
+          {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+        </button>
       </div>
 
       {isOpen && (
-        <div className="border-t border-amber-200 bg-white py-3.5 px-4 transition-all space-y-3">
-          <p className="text-slate-600 text-xs">
-            Click any scenario below to verify that unpredictable model output and network issues route to clean UI states instead of crashing:
+        <div className="border-t border-slate-200 bg-white p-3 space-y-2">
+          <p className="text-[11px] text-slate-500">
+            Simulate model failure modes to verify defensive catch handling:
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             <button
               disabled={isLoading}
               onClick={() => onSimulate('malformed')}
-              className="btn-secondary text-xs py-1.5 px-3 rounded-lg border-rose-200 hover:bg-rose-50 text-rose-700 flex items-center gap-1.5 font-medium"
-              title="AI returns invalid, broken JSON text"
+              className="btn-secondary text-[11px] py-1 px-2 rounded-lg border-rose-200 text-rose-700 hover:bg-rose-50 flex items-center gap-1"
             >
-              <AlertOctagon className="w-3.5 h-3.5 text-rose-600" />
+              <AlertOctagon className="w-3 h-3 text-rose-600" />
               <span>Malformed JSON</span>
             </button>
 
             <button
               disabled={isLoading}
               onClick={() => onSimulate('wrong_shape')}
-              className="btn-secondary text-xs py-1.5 px-3 rounded-lg border-amber-200 hover:bg-amber-50 text-amber-700 flex items-center gap-1.5 font-medium"
-              title="AI returns valid JSON with missing required fields"
+              className="btn-secondary text-[11px] py-1 px-2 rounded-lg border-amber-200 text-amber-700 hover:bg-amber-50 flex items-center gap-1"
             >
-              <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
-              <span>Wrong Shape / Missing Fields</span>
+              <ShieldAlert className="w-3 h-3 text-amber-600" />
+              <span>Wrong Shape</span>
             </button>
 
             <button
               disabled={isLoading}
               onClick={() => onSimulate('empty')}
-              className="btn-secondary text-xs py-1.5 px-3 rounded-lg border-orange-200 hover:bg-orange-50 text-orange-700 flex items-center gap-1.5 font-medium"
-              title="AI returns blank/empty response"
+              className="btn-secondary text-[11px] py-1 px-2 rounded-lg border-orange-200 text-orange-700 hover:bg-orange-50 flex items-center gap-1"
             >
-              <RefreshCw className="w-3.5 h-3.5 text-orange-600" />
+              <RefreshCw className="w-3 h-3 text-orange-600" />
               <span>Empty Response</span>
             </button>
 
             <button
               disabled={isLoading}
               onClick={() => onSimulate('slow_timeout')}
-              className="btn-secondary text-xs py-1.5 px-3 rounded-lg border-blue-200 hover:bg-blue-50 text-blue-700 flex items-center gap-1.5 font-medium"
-              title="AI hangs > 25s, triggering abort timeout"
+              className="btn-secondary text-[11px] py-1 px-2 rounded-lg border-blue-200 text-blue-700 hover:bg-blue-50 flex items-center gap-1"
             >
-              <Clock className="w-3.5 h-3.5 text-blue-600" />
-              <span>Slow Response (Timeout)</span>
+              <Clock className="w-3 h-3 text-blue-600" />
+              <span>Timeout (&gt;25s)</span>
             </button>
 
             <button
               disabled={isLoading}
               onClick={() => onSimulate('server_error')}
-              className="btn-secondary text-xs py-1.5 px-3 rounded-lg border-rose-200 hover:bg-rose-50 text-rose-700 flex items-center gap-1.5 font-medium"
-              title="Backend proxy 500 error"
+              className="btn-secondary text-[11px] py-1 px-2 rounded-lg border-rose-200 text-rose-700 hover:bg-rose-50 flex items-center gap-1"
             >
-              <Zap className="w-3.5 h-3.5 text-rose-600" />
-              <span>Server 500 Error</span>
+              <Zap className="w-3 h-3 text-rose-600" />
+              <span>Server 500</span>
             </button>
 
             <button
               disabled={isLoading}
               onClick={onTestStaleRaceCondition}
-              className="btn-secondary text-xs py-1.5 px-3 rounded-lg border-purple-200 hover:bg-purple-50 text-purple-700 flex items-center gap-1.5 font-medium"
-              title="Simulates fast request overtaking slow request to test requestId guard"
+              className="btn-secondary text-[11px] py-1 px-2 rounded-lg border-purple-200 text-purple-700 hover:bg-purple-50 flex items-center gap-1"
             >
-              <FastForward className="w-3.5 h-3.5 text-purple-600" />
-              <span>Stale Request Guard Test</span>
+              <FastForward className="w-3 h-3 text-purple-600" />
+              <span>Stale Race Guard</span>
             </button>
           </div>
         </div>

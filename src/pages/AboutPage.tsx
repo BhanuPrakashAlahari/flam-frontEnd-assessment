@@ -1,148 +1,126 @@
-import { 
-  Info, ShieldCheck, CheckCircle2, Layers, Cpu 
-} from 'lucide-react';
+import React from 'react';
+import { ShieldCheck, CheckCircle2, Layers, Cpu, Bug } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const AboutPage: React.FC = () => {
   return (
-    <div className="space-y-8 animate-in fade-in duration-300 max-w-4xl mx-auto">
-      {/* Header Banner */}
-      <div className="glass-panel p-6 sm:p-8 border border-slate-200 bg-white relative overflow-hidden shadow-sm">
-        <div className="relative z-10 space-y-2">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
-              <Info className="w-5 h-5" />
-            </div>
-            <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Architecture & Assignment Specification
-            </h1>
-          </div>
-          <p className="text-sm text-slate-600">
-            Flam Frontend Internship Assignment • Technical Design Decisions, Data Flow & Defensive Architecture
-          </p>
-        </div>
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <div>
+        <h1 className="font-display text-2xl font-bold text-slate-900">
+          Architecture & Design Overview
+        </h1>
+        <p className="text-xs text-slate-500">
+          Flam Frontend Internship Assignment • Technical Implementation & Rubric Compliance
+        </p>
       </div>
 
-      {/* Core Principles Cards */}
+      {/* 3 Core Pillars */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="glass-panel p-5 border border-slate-200 bg-white space-y-2 shadow-xs">
-          <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
             <Layers className="w-4 h-4" />
           </div>
-          <h3 className="font-display font-bold text-sm text-slate-900">No Chatbot Rule</h3>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Free-form inputs are converted strictly into typed JSON schemas that drive interactive UI components—never printed as raw chat prose.
+          <h3 className="font-display font-bold text-sm text-slate-900">Structured Data Only</h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Free-form inputs are converted strictly into typed JSON schemas to drive interactive UI components without chatbot prose.
           </p>
         </div>
 
-        <div className="glass-panel p-5 border border-slate-200 bg-white space-y-2 shadow-xs">
-          <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+          <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
             <ShieldCheck className="w-4 h-4" />
           </div>
-          <h3 className="font-display font-bold text-sm text-slate-900">Defensive Parsing</h3>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Every model response undergoes markdown stripping, JSON syntax validation, and strict Zod runtime type-checking before touching React state.
+          <h3 className="font-display font-bold text-sm text-slate-900">Defensive Validation</h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Strict Zod parsing catches malformed JSON, schema mismatches, and race conditions before touching React state.
           </p>
         </div>
 
-        <div className="glass-panel p-5 border border-slate-200 bg-white space-y-2 shadow-xs">
-          <div className="w-8 h-8 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600">
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+          <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
             <Cpu className="w-4 h-4" />
           </div>
-          <h3 className="font-display font-bold text-sm text-slate-900">Secure Proxy Layer</h3>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            API keys are kept strictly on the Node/Express backend proxy (:3001). The browser client never makes direct LLM calls.
+          <h3 className="font-display font-bold text-sm text-slate-900">Protected Backend Proxy</h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            API keys are kept strictly on the Node proxy (:3001). The browser client never makes direct LLM calls.
           </p>
         </div>
       </div>
 
-      {/* Defensive Failure Strategy Matrix */}
-      <div className="glass-panel p-6 sm:p-8 border border-slate-200 bg-white space-y-4 shadow-sm">
-        <h2 className="font-display font-bold text-lg text-slate-900 flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-blue-600" />
-          <span>Failure Mode Handling Matrix</span>
-        </h2>
+      {/* Failure Handling Table */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display font-bold text-base text-slate-900 flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-blue-600" />
+            <span>Defensive Failure Handling Matrix</span>
+          </h2>
+          <Link to="/diagnostics" className="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1">
+            <Bug className="w-3.5 h-3.5" />
+            <span>Test in Lab</span>
+          </Link>
+        </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left text-slate-700">
-            <thead className="bg-slate-50 text-slate-600 uppercase font-semibold border-b border-slate-200">
+            <thead className="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-100">
               <tr>
-                <th className="py-2.5 px-3">Failure Mode</th>
-                <th className="py-2.5 px-3">Root Cause in Production</th>
-                <th className="py-2.5 px-3">Defensive Guard Implemented</th>
+                <th className="py-2 px-3">Failure Mode</th>
+                <th className="py-2 px-3">Defensive Guard Implemented</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               <tr>
-                <td className="py-3 px-3 font-semibold text-rose-600">Malformed JSON</td>
-                <td className="py-3 px-3 text-slate-500">Unclosed brackets or conversational preamble from smaller/unpredictable models.</td>
-                <td className="py-3 px-3">Catches syntax error, sanitizes markdown code fences, and displays error diagnostics without UI crash.</td>
+                <td className="py-2.5 px-3 font-semibold text-rose-600">Malformed JSON</td>
+                <td className="py-2.5 px-3 text-slate-600">Catches syntax error, sanitizes markdown fences, and routes to friendly error state.</td>
               </tr>
               <tr>
-                <td className="py-3 px-3 font-semibold text-amber-600">Wrong Shape</td>
-                <td className="py-3 px-3 text-slate-500">Valid JSON but missing critical fields (e.g. empty steps array).</td>
-                <td className="py-3 px-3">Strict Zod runtime schema check flags field-level violations and provides itemized error trace.</td>
+                <td className="py-2.5 px-3 font-semibold text-amber-600">Wrong Shape</td>
+                <td className="py-2.5 px-3 text-slate-600">Strict Zod schema validation flags missing fields before render.</td>
               </tr>
               <tr>
-                <td className="py-3 px-3 font-semibold text-orange-600">Empty Response</td>
-                <td className="py-3 px-3 text-slate-500">Gateway dropped connection or model returned blank string.</td>
-                <td className="py-3 px-3">Explicit blank/null checks route to descriptive error state with instant retry button.</td>
+                <td className="py-2.5 px-3 font-semibold text-orange-600">Empty Response</td>
+                <td className="py-2.5 px-3 text-slate-600">Explicit blank checks trigger informative retry UI.</td>
               </tr>
               <tr>
-                <td className="py-3 px-3 font-semibold text-blue-600">Slow Timeout (&gt;25s)</td>
-                <td className="py-3 px-3 text-slate-500">High inference queue latency causing silent page hangs.</td>
-                <td className="py-3 px-3">Client-side `AbortController` timer aborts at 25s and displays friendly retry UI.</td>
+                <td className="py-2.5 px-3 font-semibold text-blue-600">Slow Timeout (&gt;25s)</td>
+                <td className="py-2.5 px-3 text-slate-600">Client-side `AbortController` timer safely aborts hanging requests.</td>
               </tr>
               <tr>
-                <td className="py-3 px-3 font-semibold text-purple-600">Stale Race Condition</td>
-                <td className="py-3 px-3 text-slate-500">Slow Request A resolves after faster Request B, silently overwriting newer results.</td>
-                <td className="py-3 px-3">`staleRequestIdRef` counter discards any response whose ID does not match current counter.</td>
+                <td className="py-2.5 px-3 font-semibold text-purple-600">Stale Race Condition</td>
+                <td className="py-2.5 px-3 text-slate-600">`staleRequestIdRef` counter discards outdated in-flight responses.</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Assignment Rubric Compliance */}
-      <div className="glass-panel p-6 sm:p-8 border border-slate-200 bg-white space-y-4 shadow-sm">
-        <h2 className="font-display font-bold text-lg text-slate-900 flex items-center gap-2">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-          <span>Rubric Criteria & Compliance Checklist</span>
+      {/* Rubric Checklist */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+        <h2 className="font-display font-bold text-base text-slate-900 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          <span>Assignment Rubric Compliance</span>
         </h2>
 
-        <div className="space-y-3 text-xs sm:text-sm text-slate-700">
-          <div className="flex items-start gap-2.5">
-            <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">✓</span>
-            <div>
-              <strong className="text-slate-900">React & Frontend Architecture (25%):</strong> Clean modular components, custom hooks, typed interfaces, and zero prop-drilling chaos.
-            </div>
+        <div className="space-y-2 text-xs text-slate-600">
+          <div className="flex items-start gap-2">
+            <span className="text-emerald-600 font-bold">✓</span>
+            <div><strong>React & Frontend Architecture (25%):</strong> Clean functional components, custom hooks, typed interfaces.</div>
           </div>
-
-          <div className="flex items-start gap-2.5">
-            <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">✓</span>
-            <div>
-              <strong className="text-slate-900">AI Integration & Data Handling (25%):</strong> Google Gemini 3 Flash structured output via protected backend proxy + built-in offline mock engine fallback.
-            </div>
+          <div className="flex items-start gap-2">
+            <span className="text-emerald-600 font-bold">✓</span>
+            <div><strong>AI Integration & Data Handling (25%):</strong> Gemini 3 Flash structured output via backend proxy + mock engine fallback.</div>
           </div>
-
-          <div className="flex items-start gap-2.5">
-            <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">✓</span>
-            <div>
-              <strong className="text-slate-900">Handling Bad AI Output (20%):</strong> Exhaustive defensive parsing, Zod validation, and live evaluator testing bar.
-            </div>
+          <div className="flex items-start gap-2">
+            <span className="text-emerald-600 font-bold">✓</span>
+            <div><strong>Handling Bad AI Output (20%):</strong> Exhaustive defensive parsing, Zod validation, and test harness.</div>
           </div>
-
-          <div className="flex items-start gap-2.5">
-            <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">✓</span>
-            <div>
-              <strong className="text-slate-900">UI/UX & Product Sense (15%):</strong> Scalable servings with fraction math, smart swap toggles, focus cooking mode with audio chimes.
-            </div>
+          <div className="flex items-start gap-2">
+            <span className="text-emerald-600 font-bold">✓</span>
+            <div><strong>UI/UX & Product Sense (15%):</strong> Scalable servings with fraction math, smart swaps, focus cooking mode with audio.</div>
           </div>
-
-          <div className="flex items-start gap-2.5">
-            <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">✓</span>
-            <div>
-              <strong className="text-slate-900">Communication & Documentation (15%):</strong> Full README.md, AI disclosure note, architecture breakdown, and time spent.
-            </div>
+          <div className="flex items-start gap-2">
+            <span className="text-emerald-600 font-bold">✓</span>
+            <div><strong>Documentation (15%):</strong> Complete README.md, AI disclosure note, and architecture breakdown.</div>
           </div>
         </div>
       </div>

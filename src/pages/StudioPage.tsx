@@ -42,14 +42,7 @@ export const StudioPage: React.FC<StudioPageProps> = ({
   onTestStaleRaceCondition,
 }) => {
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Evaluator Failure Mode Simulator Bar */}
-      <FailureSimulator
-        onSimulate={onSimulate}
-        onTestStaleRaceCondition={onTestStaleRaceCondition}
-        isLoading={isLoading}
-      />
-
+    <div className="space-y-6 max-w-5xl mx-auto">
       {/* Free-form Input Area */}
       <PromptInput
         onGenerate={onGenerate}
@@ -72,6 +65,15 @@ export const StudioPage: React.FC<StudioPageProps> = ({
         checkedSteps={checkedSteps}
         onToggleStep={onToggleStep}
       />
+
+      {/* Discrete Evaluator Failure Bar at bottom */}
+      <div className="pt-4">
+        <FailureSimulator
+          onSimulate={onSimulate}
+          onTestStaleRaceCondition={onTestStaleRaceCondition}
+          isLoading={isLoading}
+        />
+      </div>
     </div>
   );
 };
