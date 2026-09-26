@@ -1,139 +1,182 @@
 # CookMate - AI Fridge-to-Recipe Interactive Studio
 
-Frontend Internship Assessment for Flam
-Transform unpredictable AI model output into reliable, interactive, and resilient kitchen UI.
+> **Frontend Internship Assessment for Flam**  
+> Transform unpredictable AI model output into a reliable, interactive, and resilient kitchen UI.
 
 ---
 
-## 1. Overview
+## 1. Project Overview
 
-CookMate is a specialized React web application that converts unstructured kitchen notes (for example, "I have 3 eggs, cheddar cheese, garlic, spinach, and leftover rice") into an interactive culinary tool. 
+**CookMate** is a specialized React web application that converts unstructured kitchen notes (e.g., *"I have 3 eggs, cheddar cheese, garlic, baby spinach, and leftover rice"*) into an interactive culinary tool.
 
-The application communicates with a secure backend proxy to request structured JSON data conforming to a strict schema. All responses pass through defensive parsing, sanitization, and runtime Zod validation before rendering. The user interface handles all realistic AI failure modes gracefully without crashing, and includes dynamic interactive features such as scalable ingredient servings, smart substitutions, checkable steps with countdown timers, and a focus cooking mode.
+The application communicates with a secure backend proxy to request structured JSON conforming to a strict recipe schema. All incoming responses pass through defensive parsing, sanitization, and runtime Zod validation before rendering. The user interface gracefully handles all realistic AI failure modes without crashing, offering dynamic features such as scalable servings, interactive ingredient swaps, checkable cooking steps with countdown timers, focus cooking mode, and local cookbook storage.
 
 ---
 
-## 2. Architecture & Design
+## 2. Architecture & Directory Structure
 
-The project uses a client-server architecture to ensure API keys remain protected while keeping the frontend fast and reactive:
+The project follows the assessment's designated client-server architecture to ensure API keys remain protected while keeping the frontend fast, responsive, and defensive:
 
 ```
-flam/
+flam-frontend-assignment/
 ├── src/
 │   ├── components/
-│   │   ├── ui/                    # Base UI components (navigation, dialog, buttons)
-│   │   ├── PromptInput.tsx        # Ingredient input, quick-add pills, dietary filters
+│   │   ├── ui/                    # Base UI primitives (buttons, dialogs, sheet, inputs)
+│   │   ├── PromptInput.tsx        # Free-form ingredient input, quick-add pills, dietary filters
 │   │   ├── ResultView.tsx         # State router (Loading / Error / Recipe / Empty)
-│   │   ├── RecipeView.tsx         # Main recipe display (scalable servings, checkable steps)
-│   │   ├── CookingModeModal.tsx   # Focus mode with step navigation & countdown timers
-│   │   ├── ErrorState.tsx         # Defensive error UI with retry action and technical traces
-│   │   ├── LoadingState.tsx       # Skeleton loaders and status indicators
+│   │   ├── RecipeView.tsx         # Main recipe display (scalable servings, swaps, checkable steps)
+│   │   ├── CookingModeModal.tsx   # Focus mode with step navigation, timers & audio chime
+│   │   ├── ErrorState.tsx         # Shared defensive error UI with retry action and technical traces
+│   │   ├── LoadingState.tsx       # Skeleton loader with progressive culinary status updates
 │   │   ├── FailureSimulator.tsx   # Evaluator toolbar to trigger and verify failure modes
-│   │   ├── SavedRecipesModal.tsx  # LocalStorage saved recipe drawer
-│   │   └── Navbar.tsx             # Translucent navigation header with route links
+│   │   ├── SavedRecipesModal.tsx  # LocalStorage cookbook drawer
+│   │   └── Navbar.tsx             # Floating navigation bar with route links
 │   ├── lib/
-│   │   ├── api.ts                 # Backend communication, timeout guards, and request tracking
-│   │   ├── validateResult.ts      # Defensive JSON sanitization and Zod schema validation
+│   │   ├── api.ts                 # ONLY place frontend talks to backend; timeout & stale guards
+│   │   ├── validateResult.ts      # Defensive JSON sanitization and Zod runtime schema validation
+│   │   ├── culinaryValidation.ts  # Pre-flight culinary dictionary and non-food intent detector
 │   │   └── utils.ts               # Class name merging utility (cn)
 │   ├── types/
 │   │   └── result.ts              # TypeScript interfaces and Zod runtime schemas
 │   ├── App.tsx                    # Top-level state orchestration and race condition protection
-│   ├── index.css                  # Modern CSS design system (White & Royal Blue theme)
+│   ├── index.css                  # Tailwind CSS design system (White & Royal Blue theme)
 │   └── main.tsx                   # Application entry point
 ├── server/
-│   ├── generate.ts                # Backend service handling Gemini API calls and mock engine
+│   ├── generate.ts                # Backend proxy handling Gemini API calls and mock fallback
 │   └── index.ts                   # Express server entry point on port 3001
+├── api/
+│   ├── generate.ts                # Vercel Serverless Function endpoint for recipe generation
+│   └── health.ts                  # Serverless health check endpoint
 ├── .env.example                   # Environment configuration template
-├── README.md                      # Project documentation
+├── vercel.json                    # Vercel deployment and SPA routing configuration
+├── README.md                      # Complete project documentation
 └── package.json                   # Dependencies and scripts
 ```
 
-### Key Architectural Decisions:
-1. **Protected Backend Proxy**: The Gemini API key is stored exclusively on the server (`server/index.ts` and `server/generate.ts`) and is never exposed to the client bundle.
-2. **Defensive Validation Layer**: The client never directly consumes raw LLM responses. Data must pass through `cleanRawJsonString` and `RecipeResultSchema.safeParse` before entering application state.
-3. **Built-in Mock Engine**: If no Gemini API key is configured, the server automatically uses an intelligent culinary mock engine to generate realistic responses, allowing full offline testing.
-
 ---
 
-## 3. Quick Start & Setup Guide
+## 3. Setup Guide
 
 ### Prerequisites
-- Node.js (v18 or higher)
-- npm (v9 or higher)
+* **Node.js**: `v18.0.0` or higher
+* **npm**: `v9.0.0` or higher
 
-### Installation & Running
+### Local Installation & Running
 
-1. Clone the repository and install dependencies:
-```bash
-git clone https://github.com/BhanuPrakashAlahari/flam-frontEnd-assessment.git
-cd flam
-npm install
-```
+1. **Clone the repository and install dependencies:**
+   ```bash
+   git clone https://github.com/BhanuPrakashAlahari/flam-frontEnd-assessment.git
+   cd flam
+   npm install
+   ```
 
-2. (Optional) Configure Google Gemini API Key:
-By default, the application runs out-of-the-box using the built-in mock engine. To enable live AI generation:
-```bash
-cp .env.example .env
-```
-Open `.env` and add your Google Gemini API key:
-```env
-GEMINI_API_KEY=your_actual_gemini_api_key_here
-PORT=3001
-```
+2. **Configure Environment Variables (Optional):**
+   The application works out-of-the-box in offline testing mode using the built-in Intelligent Culinary Mock Engine. To enable live Google Gemini Flash AI generation:
+   ```bash
+   cp .env.example .env
+   ```
+   Open `.env` and add your Gemini API key:
+   ```env
+   GEMINI_API_KEY=your_actual_gemini_api_key_here
+   PORT=3001
+   ```
 
-3. Start the application:
-```bash
-npm start
-```
-This command concurrently starts:
-- The Backend Proxy on `http://localhost:3001`
-- The Vite Frontend on `http://localhost:5173`
+3. **Start the Development Environment:**
+   ```bash
+   npm start
+   ```
+   This concurrently launches:
+   * **Backend Proxy Server** on `http://localhost:3001`
+   * **Vite React Frontend** on `http://localhost:5173`
 
 4. Open `http://localhost:5173` in your browser.
 
+### Vercel Production Deployment
+
+* **Framework Preset**: Vite
+* **Root Directory**: `./`
+* **Build Command**: `npm run build`
+* **Output Directory**: `dist`
+* **Environment Variables**: Add `GEMINI_API_KEY` in your Vercel Project Settings.
+
 ---
 
-## 4. Error Handling Strategy
+## 4. Usage Guide
 
-Handling unpredictability in generative AI output is central to this project. The system addresses all 6 core failure modes:
+1. **Enter Ingredients**:
+   * Type any free-form text into the prompt input (e.g. *"3 eggs, pasta, spinach, parmesan, garlic"*).
+   * Click quick-add ingredient tags or select dietary preferences (e.g. *Vegetarian, High Protein, Dairy-Free*).
+   * Click **Generate Recipe**.
+
+2. **Adjust Servings & Portions**:
+   * Use the `+` and `-` stepper on the recipe card to adjust portions (1–12 portions).
+   * Ingredient quantities and fractions automatically recalculate in real-time (e.g. `1/2 tbsp`, `1 1/4 cups`, `300g`).
+
+3. **Interactive Ingredient Substitutions**:
+   * Click any highlighted substitution pill under an ingredient to swap it in-place (e.g., swapping *Eggs* for *Silken Tofu* or *Butter* for *Avocado Oil*).
+
+4. **Cooking Mode with Timers**:
+   * Click **Start Fullscreen Cooking Mode** for a distraction-free step-by-step view.
+   * Cross off steps as you cook.
+   * Start built-in countdown timers for simmering/baking steps with synthesized Web Audio chimes upon completion.
+
+5. **Recipe Refinement**:
+   * Use the refinement bar to tweak the current recipe (e.g., *"Make it spicy"*, *"Air fryer version"*, *"Under 15 minutes"*).
+
+6. **Cookbook Storage**:
+   * Click **Save** to persist the recipe to browser `localStorage`.
+   * Click **Cookbook** in the navbar to browse, view, or delete saved recipes.
+   * Click **Print** to export a clean printable recipe card or **Copy** to copy formatted ingredients to your clipboard.
+
+7. **Evaluator Simulation Toolbar**:
+   * Click **Assignment Evaluator: Live AI Failure Simulation Toolbar** at the bottom of the Studio page to trigger and verify the 6 failure scenarios with 1 click.
+
+---
+
+## 5. Error Handling Strategy
+
+The system defends against all 6 core failure modes without crashing the React render tree:
 
 | Failure Mode | Root Cause | Handling Strategy | User Experience |
 | :--- | :--- | :--- | :--- |
-| **Malformed JSON** | Model outputs invalid syntax or markdown wrappers | Strips markdown fences (`\`\`\`json`), catches `JSON.parse` errors in `validateResult.ts`, and routes to a clear error state. | Clear error card explaining syntax failure with a "Retry Generation" button. |
-| **Wrong Shape / Missing Fields** | Model produces valid JSON but omits mandatory fields or passes wrong types | Validates structure using runtime `Zod` schemas (`RecipeResultSchema.safeParse`). Handles `null` fields defensively with fallback defaults. | Descriptive error message identifying the missing fields without breaking the UI. |
-| **Empty Response** | Model returns an empty string or whitespace | Checks for empty string/null data before parsing and routes to an explicit failure state. | Clear notification stating no content was generated, offering an instant retry. |
-| **Slow Response / Timeout** | Upstream API hangs or network degrades | Uses an `AbortController` in `api.ts` configured with a 25-second timeout limit. | Request is safely aborted, loading spinner dismisses, and a timeout error with retry appears. |
-| **Failed Backend Request** | Server error (HTTP 500), rate limiting (429), or network drop | Wraps all fetch calls in `try/catch` and inspects `response.ok`, extracting error details safely as plain text. | Non-crashing error card detailing the status code and actionable retry prompt. |
-| **Stale Response Race Condition** | Older slow request resolves after a newer fast request | Tracks incremental `requestId` counters. Older in-flight responses that do not match the current ID are discarded. | Newer request data is preserved; stale responses never overwrite the latest UI state. |
+| **Malformed JSON** | Model outputs invalid syntax or unclosed brackets | Strips markdown fences (`\`\`\`json`), wraps `JSON.parse` in defensive try/catch in `validateResult.ts`. | Displays `MALFORMED_JSON` error card with collapsible technical diagnostics and a Retry button. |
+| **Wrong Shape / Missing Fields** | Model produces valid JSON missing required schema properties | Validates structure using runtime `Zod` schemas (`RecipeResultSchema.safeParse`) with fallbacks. | Displays `WRONG_SHAPE` error card listing exact field violations without breaking UI. |
+| **Empty Response** | Model returns empty string, whitespace, or null payload | Boundary checks before parsing route immediately to explicit empty failure handler. | Displays `EMPTY_RESPONSE` error card offering instant retry or sample recipe loading. |
+| **Slow Response / Timeout** | Upstream model hangs or network latency exceeds limit | Uses an `AbortController` in `src/lib/api.ts` with a strict 25-second timeout limit. | Request aborts safely, cancels loading state, and displays `SLOW_TIMEOUT` error card. |
+| **Backend Server Error (500)** | Gateway error, rate limit (429), or proxy failure | Wraps all fetch calls in defensive handlers, extracting error details as plain text. | Displays `SERVER_ERROR` card detailing HTTP status code with actionable retry prompt. |
+| **Stale Response Race Condition** | Older slow request resolves after a newer fast request | Uses monotonic `requestId` counters and active `AbortController` abort signals. | Older in-flight response is discarded; only the latest request updates the UI. |
 
 ---
 
-## 5. Core Interactive Features
+## 6. AI Usage Note
 
-- **Dynamic Serving Scaler**: Adjust servings (1x, 2x, 4x, or custom 1-12 portions) with real-time recalculation of ingredient quantities and formatted fractions (for example: 1/2 tbsp, 1 3/4 cups, 300g).
-- **Smart Ingredient Substitutions**: View realistic alternatives for dietary needs (e.g. dairy-free, vegetarian) and click to swap ingredients in-place.
-- **Checkable Steps & Timers**: Cross off completed cooking steps with real-time progress tracking. Steps with durations include interactive countdown timers and audio completion chimes.
-- **Focus Cooking Mode**: Distraction-free full-screen modal with large step text, ingredient callouts, and step navigation.
-- **Recipe Refinement**: Refine an existing recipe with follow-up instructions (e.g., "Make it spicy", "Under 15 minutes").
-- **Cookbook Storage**: Save favorite recipes to browser `localStorage` with options to copy ingredients or print recipe cards.
-- **Evaluator Test Bar**: Collapsible toolbar at the bottom of the studio allowing reviewers to trigger all 6 failure modes with one click.
+In accordance with assessment transparency guidelines:
 
----
-
-## 6. AI Usage Disclosure
-
-In compliance with assessment requirements:
-- **AI Coding Tools**: Used for scaffolding TypeScript boilerplate, drafting Zod validation schemas, and accelerating styling structure.
-- **Independent Design & Logic**: Architecture, race-condition mitigation (`requestIdRef`), defensive stream handling, Web Audio chime synthesis, fraction scaling algorithms, and failure simulation testing were designed and reviewed by the candidate.
+* **AI Coding Assistants**: AI tools (such as Claude / Gemini / ChatGPT) were used to accelerate initial boilerplate generation (e.g. preliminary Tailwind utility classes and baseline TypeScript interface declarations).
+* **Independent Architecture & Logic**:
+  * The dual-layer defensive validation architecture (`validateCulinaryInput` &rarr; `validateResult` &rarr; `Zod schema safeParse`) was architected and verified independently.
+  * Stale request race condition prevention using monotonic ID refs (`requestId !== staleRequestIdRef.current`) and `AbortController` signal abortion was custom-built.
+  * Fraction scaling algorithms (`formatAmount`), synthesized Web Audio timer chimes, and the 1-click Evaluator Failure Simulation toolbar were custom-designed and implemented for this assessment.
 
 ---
 
-## 7. Time Spent Breakdown
+## 7. Known Limitations
 
-- Architecture and Schema Definition: ~45 mins
-- Backend Proxy and Gemini Integration: ~1 hour
-- Defensive Validation Engine & Error Handling: ~1.5 hours
-- Interactive UI Components & Cooking Mode: ~2.5 hours
-- Design System, Animations, and Sound Effects: ~1.5 hours
-- Testing, Verification, and Documentation: ~1 hour
-- **Total Time**: ~8 hours
+1. **LLM Nutrition Estimation**: Nutritional values (calories, protein, carbs, fats) are estimates calculated by generative AI models and should not be used as certified medical or dietary advice.
+2. **Single Recipe Output**: The model generates one curated recipe per prompt rather than multi-recipe comparison matrices.
+3. **Local Storage Cookbook**: Saved recipes are persisted in browser `localStorage` (client-side only), meaning they are device-specific and will clear if browser storage is reset.
+4. **Offline Lexicon Boundaries**: The offline culinary lexicon contains ~150+ common ingredients and dishes; highly obscure regional ingredients may require live Gemini AI mode for optimal recognition.
+
+---
+
+## 8. Time Spent Breakdown
+
+| Phase | Description | Time Spent |
+| :--- | :--- | :--- |
+| **Phase 1: Architecture & Schema Design** | Defining `RecipeResult` data model, Zod runtime schemas, and client-server boundaries | ~45 mins |
+| **Phase 2: Backend Proxy & Gemini Integration** | Express proxy on port 3001, Vercel serverless functions, prompt engineering, and smart mock fallback | ~1 hour |
+| **Phase 3: Defensive Validation & Error Pipeline** | Building `validateResult.ts`, culinary input validator, and the 6-mode failure handling system | ~1.5 hours |
+| **Phase 4: Interactive UI Components** | Building `RecipeView`, serving scaler, ingredient swaps, checkable steps, and focus cooking mode modal | ~2.5 hours |
+| **Phase 5: Design System, Polish & Sound** | Styling design system (White & Royal Blue), animations, Web Audio chime synthesis, and responsive layouts | ~1.5 hours |
+| **Phase 6: Testing, Edge Cases & Documentation** | Evaluator toolbar, stale race condition verification, Vercel production deployment, and README | ~1 hour |
+| **Total Development Time** | | **~8 hours** |
